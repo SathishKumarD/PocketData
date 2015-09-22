@@ -15,6 +15,7 @@ import phonedataparser.Logger;
 public class TestParser {
 
     public static void test_getFiles() {
+    	//test commit
         String srcDir = "/Users/sathish/Desktop/logcat";
         String logFilePath = "/Users/sathish/Dropbox/UB_Fall_2015/662- DB/code/sql/data/insert_analytics_data.sql";
         Logger logger = new Logger(srcDir, ".gz", logFilePath);
