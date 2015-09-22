@@ -54,7 +54,6 @@ public class Logger {
             if (file.isDirectory()) {
                 iterateFolders(file.listFiles(), filesList); // Calls same method again.
             } else if (name.endsWith(fileExtension) && file.getAbsolutePath().contains("SQLite-Query-PhoneLab")) {
-
                 filesList.add(file.getAbsolutePath());
             }
         }
@@ -66,6 +65,7 @@ public class Logger {
         for (String filePath : files) {
             //System.out.println(filePath);
             counter += 1;
+            // remove this. For testing purpose I am just parsing two files.
             if (counter < 3) {
                 accessGZfile(filePath);
             }
@@ -115,15 +115,4 @@ public class Logger {
 
         }
     }
-
-    private String getAppNameFromHash(String userID, String processID, String threadID) {
-        String key = userID + "_" + processID + "_" + threadID;
-        return this.appname.get(key);
-    }
-
-    private void storeAppname(String userID, String processID, String threadID, String appname) {
-        String key = userID + "_" + processID + "_" + threadID;
-        this.appname.put(key, appname);
-    }
-
 }
