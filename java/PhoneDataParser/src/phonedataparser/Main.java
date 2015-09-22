@@ -5,12 +5,7 @@
  */
 package phonedataparser;
 import java.io.File;
-import net.sf.jsqlparser.parser.CCJSqlParser;
-import net.sf.jsqlparser.parser.ParseException;
-import net.sf.jsqlparser.statement.select.Select;
 
-import net.sf.jsqlparser.statement.select.SelectBody;
-import java.io.StringReader;
 import test.TestParser;
 /**
  *
@@ -37,7 +32,7 @@ public class Main {
             System.out.println(p);
         }*/
         
-        TestParser.test_writeToLog();
+        TestParser.testParseLogsAndWriteFile();
     }
     
     public static void showFiles(File[] files) {
