@@ -22,14 +22,14 @@ import org.json.simple.parser.JSONParser;
  *
  * @author sathish
  */
-public class Logger {
+public class LogAnalyzer {
 
     String sourceDir;
     String fileExtension;
     String logFilePath;
     HashMap<String, String> appNamesMap;
 
-    public Logger(String sourceDir, String fileExtension, String logFilePath) {
+    public LogAnalyzer(String sourceDir, String fileExtension, String logFilePath) {
         this.sourceDir = sourceDir;
         this.fileExtension = fileExtension;
         this.logFilePath = logFilePath;
