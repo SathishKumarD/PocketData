@@ -40,7 +40,6 @@ PRIMARY KEY	 (user_app_process_id)
 
 -- Create table sql_log table
 CREATE TABLE IF NOT EXISTS sql_log(
-unique_id		INT,
 ticks 			INT,	
 ticks_ms 		DOUBLE,
 date_time		DATETIME,	
@@ -49,4 +48,27 @@ thread_id		INT,
 raw_data		VARCHAR(400),		
 log_id 	INT NOT NULL AUTO_INCREMENT, 
 PRIMARY KEY	 (log_id)
-) 
+);
+
+-- Create table sql_log table
+CREATE TABLE IF NOT EXISTS analytics(
+
+ticks 			INT,	
+ticks_ms 		DOUBLE,
+date_time		DATETIME,	
+user_id 		INT,
+app_name		INT,	
+query_type 			VARCHAR(10), -- SELECT, INSERT, UPDATE ETC.,
+outerjoin_count		INT,
+distinct_count		INT,
+limit_count			INT,
+orderby_count		INT,
+aggregate_count	INT,
+groupby_count	INT,
+union_count		INT,
+join_width		INT,
+where_count 	INT,
+log_id			INT NOT NULL AUTO_INCREMENT,
+
+PRIMARY KEY	 (log_id)
+); 
