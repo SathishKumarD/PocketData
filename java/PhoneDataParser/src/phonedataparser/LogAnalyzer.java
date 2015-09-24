@@ -12,35 +12,43 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONArray;
-import org.json.simple.parser.ParseException;
 import org.json.simple.parser.JSONParser;
 
 /**
  *
  * @author sathish
  */
-public class Logger {
+public class LogAnalyzer {
 
     String sourceDir;
     String fileExtension;
     String logFilePath;
-    HashMap<String, String> appname;
+    HashMap<String, String> appNamesMap;
 
-    public Logger(String sourceDir, String fileExtension, String logFilePath) {
+    public LogAnalyzer(String sourceDir, String fileExtension, String logFilePath) {
         this.sourceDir = sourceDir;
         this.fileExtension = fileExtension;
         this.logFilePath = logFilePath;
-        this.appname = new HashMap<>();
+        this.appNamesMap = new HashMap<>();
     }
 
+    public void parseLogsAndWriteFile() {
+        ArrayList<String> files = getFiles();
+        int counter = 0;
+        for (String filePath : files) {
+            //System.out.println(filePath);
+            counter += 1;
+            // remove this. For testing purpose I am just parsing two files.
+            if (counter < 3) {
+                accessGZfile(filePath);
+            }
+        }
+    }
+    
     public ArrayList<String> getFiles() {
         ArrayList<String> filesList = new ArrayList<>();
         File[] files = new File(sourceDir).listFiles();
@@ -59,44 +67,33 @@ public class Logger {
         }
     }
 
-    public void writeToLog() {
-        ArrayList<String> files = getFiles();
-        int counter = 0;
-        for (String filePath : files) {
-            //System.out.println(filePath);
-            counter += 1;
-            // remove this. For testing purpose I am just parsing two files.
-            if (counter < 3) {
-                accessGZfile(filePath);
-            }
-        }
-
-    }
-
     private void accessGZfile(String sourceFile) {
 
         Writer writer = null;
         int counter = 0;
 
         try {
-            String appname = null;
             GZIPInputStream gzip = new GZIPInputStream(new FileInputStream(sourceFile));
             BufferedReader br = new BufferedReader(new InputStreamReader(gzip));
             String logLine = null;
             writer = new BufferedWriter(new FileWriter(this.logFilePath, true));
             System.out.println(sourceFile);
             while ((logLine = br.readLine()) != null) {
+            	String appName = null;
                 String[] segments = logLine.split("\t");
+                // segments[0] - user id
+                // segments[5] - process id
+                // segments[6] - thread id
                 String key = segments[0] + '_' + segments[5] + '_' + segments[6];
                 if (logLine.contains("\"Action\":\"APP_NAME\"")) {
                     JSONParser parser = new JSONParser();
                     JSONObject obj = (JSONObject) parser.parse(segments[8]);
-                    String appName = (String) obj.get("AppName");
-                    this.appname.put(key, appName);
-                } else if ((appname = this.appname.get(key)) != null) {
+                    appName = (String) obj.get("AppName");
+                    this.appNamesMap.put(key, appName);
+                } else if ((appName = this.appNamesMap.get(key)) != null) {
                     
                     // I have an app name
-                    writer.write(appname+"\t");
+                    writer.write(appName+"\t");
                     writer.write(logLine);
                     writer.write("\n");
 

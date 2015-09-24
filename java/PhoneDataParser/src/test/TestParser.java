@@ -13,27 +13,25 @@ import phonedataparser.Logger;
  * @author sathish
  */
 public class TestParser {
-
+	
+	private static String srcDir = "C:\\Users\\Saravanan\\Downloads\\DB - 662\\project\\output";
+	private static String outFilePath = "/Users/sathish/Dropbox/UB_Fall_2015/662- DB/code/sql/data/insert_analytics_data.sql";
+	
     public static void test_getFiles() {
-        String srcDir = "/Users/sathish/Desktop/logcat";
-        String logFilePath = "/Users/sathish/Dropbox/UB_Fall_2015/662- DB/code/sql/data/insert_analytics_data.sql";
-        Logger logger = new Logger(srcDir, ".gz", logFilePath);
+        Logger logger = new Logger(srcDir, ".gz", outFilePath);
         ArrayList<String> filePaths = logger.getFiles();
-        
-        filePaths.stream().forEach((filePath) -> {
-            System.out.println(filePath);
-        });
-        
+
+        if(filePaths != null) {
+        	for(String path : filePaths) {
+        		System.out.println(path);
+            }
+        }
         
     }
     
-    public static void test_writeToLog() {
-        String srcDir = "/Users/sathish/Desktop/logcat";
-        String logFilePath = "/Users/sathish/Dropbox/UB_Fall_2015/662- DB/code/sql/data/insert_analytics_data.sql";
-        Logger logger = new Logger(srcDir, ".gz", logFilePath);
-        logger.writeToLog();
-        
-        
+    public static void testParseLogsAndWriteFile() {
+        Logger logger = new Logger(srcDir, ".gz", outFilePath);
+        logger.parseLogsAndWriteFile();
     }
 
 }
