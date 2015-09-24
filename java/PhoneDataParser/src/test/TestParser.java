@@ -6,7 +6,7 @@
 package test;
 
 import java.util.ArrayList;
-import phonedataparser.Logger;
+import phonedataparser.LogAnalyzer;
 
 /**
  *
@@ -18,7 +18,7 @@ public class TestParser {
 	private static String outFilePath = "/Users/sathish/Dropbox/UB_Fall_2015/662- DB/code/sql/data/insert_analytics_data.sql";
 	
     public static void test_getFiles() {
-        Logger logger = new Logger(srcDir, ".gz", outFilePath);
+        LogAnalyzer logger = new LogAnalyzer(srcDir, ".gz", outFilePath);
         ArrayList<String> filePaths = logger.getFiles();
 
         if(filePaths != null) {
@@ -30,7 +30,7 @@ public class TestParser {
     }
     
     public static void testParseLogsAndWriteFile() {
-        Logger logger = new Logger(srcDir, ".gz", outFilePath);
+        LogAnalyzer logger = new LogAnalyzer(srcDir, ".gz", outFilePath);
         logger.parseLogsAndWriteFile();
     }
 
