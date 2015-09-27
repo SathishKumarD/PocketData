@@ -30,26 +30,10 @@ app_name			VARCHAR(20),	-- name of the android application
 PRIMARY KEY	 (app_id)
 );
 
--- User_App table is redundant as this table captures it all.
--- Not a heavy table, DISTINCT user_id, app_id ==> user_app Table
-CREATE TABLE IF NOT EXISTS user_app_process(
-user_app_process_id 	INT NOT NULL, 
-user_id					INT,
-app_id 					INT,	
-process_id 				INT,
-thread_id				INT,	
-unix_ticks_ms			DOUBLE, 	-- ORDER BY unix_ticks_ms DESC ==> app's latest Proc, thread id				
-PRIMARY KEY	 (user_app_process_id)
-);
-
 CREATE TABLE IF NOT EXISTS sql_log(
 log_id 				INT NOT NULL, 	-- log_id is the same for sql_log and Analytics
-ticks 				INT,	
-ticks_ms 			DOUBLE,
-date_time			DATETIME,
-user_app_process_id	INT,			-- FK to user_app_process table
-process_id			INT,
-thread_id			INT,	
+user_id 			INT,			-- FK to user table
+app_id				INT,			-- FK to app table
 raw_data			TEXT,	
 PRIMARY KEY	 (log_id)
 );
