@@ -16,17 +16,13 @@ public class Sql_log extends AbstractEntity{
         return curr_PK_ID;
     }
     
-    public static void logIdChangeCallBack(int _newLogId){
-        curr_PK_ID = _newLogId;
-    }
-    
-    @Column public int log_id;
+    @Column public int sql_log_id;
     @Column public int user_id;
     @Column public int app_id;
     @Column public String raw_data;
 
-    public Sql_log(int _log_id, int _user_id, int _app_id, String _raw_data) {
-        this.log_id = _log_id;
+    public Sql_log(int _user_id, int _app_id, String _raw_data) {
+        this.sql_log_id = ++curr_PK_ID;
         this.user_id = _user_id;
         this.app_id = _app_id;
         this.raw_data = _raw_data;
@@ -39,20 +35,12 @@ public class Sql_log extends AbstractEntity{
      ***************************************************************************
      */
     
-    public static int getCurr_PK_ID() {
-        return curr_PK_ID;
+    public int getSql_log_id() {
+        return sql_log_id;
     }
 
-    public static void setCurr_PK_ID(int _curr_PK_ID) {
-        Sql_log.curr_PK_ID = _curr_PK_ID;
-    }
-
-    public int getLog_id() {
-        return log_id;
-    }
-
-    public void setLog_id(int _log_id) {
-        this.log_id = _log_id;
+    public void setSql_log_id(int _sql_log_id) {
+        this.sql_log_id = _sql_log_id;
     }
 
     public int getUser_id() {

@@ -25,8 +25,7 @@ public class Main {
         LogParser logParser = null;
         try {
             if(startUp()){
-                logParser = new LogParser(AppConstants.SRC_DIR, AppConstants.SRC_LOG_FILE_EXT, 
-                              AppConstants.DEST_FOLDER +File.separator+ AppConstants.DEST_FILE);
+                logParser = new LogParser(AppConstants.SRC_DIR, AppConstants.SRC_LOG_FILE_EXT);
                 logParser.parseLogsAndWriteFile();
                 
                 try {
@@ -41,6 +40,15 @@ public class Main {
             
         } catch (Exception e) {
             e.printStackTrace();
+            if(logParser != null){
+                try {
+                    logParser.shutDown();
+                } catch (Exception ex) {
+                    System.out.println("Unable to shutDown LogParser");
+                    ex.printStackTrace();
+                }
+            }
+            
         }
     }
     
@@ -54,29 +62,31 @@ public class Main {
      */
     public static boolean startUp() throws Exception{
         boolean out = false;
-        File destinationFile = new File(AppConstants.DEST_FOLDER + File.separator + AppConstants.DEST_FILE);
+        File destinationFolder = new File(AppConstants.DEST_FOLDER);
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         try {
-            if(destinationFile.exists()){
-                System.out.println("Destination file \"" + AppConstants.DEST_FILE + "\" already exists. \nWould you like to append the new run? \nY --> Continue\nN --> Abort");
-                String input = null;
-                while((input = br.readLine()) != null){
-                    if("Y".equalsIgnoreCase(input)){
-                        out = true;
-                        break;
-                    } else if ("N".equalsIgnoreCase(input)){
-                        out = false;
-                        break;
-                    } else {
-                        System.out.println("What did you say??? Enter (Y/N)");
+            if(destinationFolder.exists()){
+                String [] filesInOUTFolder = destinationFolder.list(
+                        (File _dir, String _fileName) -> _fileName.endsWith(AppConstants.OUTPUT_FILE_EXT));
+                if(filesInOUTFolder != null && filesInOUTFolder.length > 0){
+                    System.out.println("Destination folder \"" + AppConstants.DEST_FOLDER + "\" already has prior run files. \nWould you like to append the new run? \nY --> Continue\nN --> Abort");
+                    String input = null;
+                    while((input = br.readLine()) != null){
+                        if("Y".equalsIgnoreCase(input)){
+                            out = true;
+                            break;
+                        } else if ("N".equalsIgnoreCase(input)){
+                            out = false;
+                            break;
+                        } else {
+                            System.out.println("What did you say??? Enter (Y/N)");
+                        }
                     }
+                } else {
+                    out = true;
                 }
             } else {
-                File destinationFolder = new File(AppConstants.DEST_FOLDER);
-                if(!destinationFolder.exists()){
-                    destinationFolder.mkdirs();
-                }
-                destinationFile.createNewFile();
+                destinationFolder.mkdirs();
                 out = true;
             }
         } catch (Exception e) {

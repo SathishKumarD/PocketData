@@ -6,6 +6,7 @@
             <name>PhoneDataParser</name>
             <source-roots>
                 <root id="src.dir"/>
+                <root id="src.sql.dir" name="sql"/>
             </source-roots>
             <test-roots>
                 <root id="test.src.dir"/>

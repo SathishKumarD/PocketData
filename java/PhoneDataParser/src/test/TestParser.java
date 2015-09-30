@@ -6,7 +6,6 @@
 package test;
 
 import edu.ub.tbd.constants.AppConstants;
-import java.util.ArrayList;
 import edu.ub.tbd.parser.LogParser;
 
 /**
@@ -34,11 +33,6 @@ public class TestParser {
     
     
     public static void testParseLogsAndWriteFile() throws Exception{
-        LogParser logger = new LogParser(AppConstants.SRC_DIR, 
-                                                AppConstants.SRC_LOG_FILE_EXT, 
-                                                AppConstants.DEST_FILE);
-        
-        logger.parseLogsAndWriteFile();
     }
 
 }

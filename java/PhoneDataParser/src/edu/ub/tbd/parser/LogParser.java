@@ -7,8 +7,8 @@ package edu.ub.tbd.parser;
 
 import edu.ub.tbd.beans.LogLineBean;
 import edu.ub.tbd.constants.AppConstants;
+import edu.ub.tbd.entity.Analytics;
 import edu.ub.tbd.entity.App;
-import edu.ub.tbd.entity.LogIdGenerator;
 import edu.ub.tbd.entity.Sql_log;
 import edu.ub.tbd.entity.Unparsed_log_lines;
 import edu.ub.tbd.entity.User;
@@ -24,7 +24,6 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -40,7 +39,6 @@ public class LogParser {
 
     private final String sourceDir;
     private final String fileExtension;
-    private final String logFilePath;
     private final HashMap<String, String> appNameLookUpMap = new HashMap<>();
     
     private JSONParser parser = new JSONParser();
@@ -55,14 +53,14 @@ public class LogParser {
     //All Persistance Services below. They must be closed during shutdown
     private final PersistanceService ps_UnparsedLogLines;
     private final PersistanceService ps_SqlLog;
+    private final PersistanceService ps_Analytics;
     
     private String longestLine = null; //TODO: <Sankar> Remove in final release
     private int longestLineLength = 0; //TODO: <Sankar> Remove in final release
 
-    public LogParser(String _sourceDir, String _fileExtension, String _logFilePath) throws Exception{
+    public LogParser(String _sourceDir, String _fileExtension) throws Exception{
         this.sourceDir = _sourceDir;
         this.fileExtension = _fileExtension;
-        this.logFilePath = _logFilePath;
         regx_userGUIDInFilePath = Pattern.compile(sourceDir + File.separator +
                 "logcat" + File.separator + "(\\p{Alnum}+)" + File.separator);
         
@@ -71,6 +69,9 @@ public class LogParser {
         
         this.ps_SqlLog = new PersistanceFileService(AppConstants.DEST_FOLDER, 
                 AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Sql_log.class);
+        
+        this.ps_Analytics = new PersistanceFileService(AppConstants.DEST_FOLDER, 
+                AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Analytics.class);
     }
 
     public void parseLogsAndWriteFile() throws Exception{
@@ -80,9 +81,9 @@ public class LogParser {
             System.out.println(filePath);
             counter += 1;
             //TODO: <Satish> remove this. For testing purpose I am just parsing two files.
-//            if (counter < 2) {
+            if (counter < 2) {
                 parseSingleLogFile(filePath);
-//            }  
+            }  
         }
     }
     
@@ -117,7 +118,6 @@ public class LogParser {
         extractUser(_sourceFile);
         
         BufferedReader br = null;
-        Writer writer = null;
         String logLine = null;
         int lineNumber = 0;
 
@@ -126,7 +126,6 @@ public class LogParser {
             GZIPInputStream gzip = new GZIPInputStream(new FileInputStream(_sourceFile));
             br = new BufferedReader(new InputStreamReader(gzip));
             
-            writer = new BufferedWriter(new FileWriter(this.logFilePath, true));
             //System.out.println(sourceFile);
             
             while ((logLine = br.readLine()) != null) {
@@ -135,7 +134,9 @@ public class LogParser {
                 
                 //TODO: <Sankar> Check how WARN and other levels function
                 if(!LogLevel.ERROR.equals(logLineBean.getLog_level())){ //ERROR log level has no JSON to process
-                    String key = logLineBean.getUser_guid() + "_" + logLineBean.getProcess_id() + "_" + logLineBean.getThread_id();
+                    String key = logLineBean.getUser_guid() + "_" + logLineBean.getProcess_id() + 
+                            "_" + logLineBean.getThread_id();
+                    
                     JSONObject JSON_Obj = (JSONObject) parser.parse(logLineBean.getLog_msg());
 
                     switch ((String) JSON_Obj.get("Action")) {
@@ -148,7 +149,6 @@ public class LogParser {
                             break;
                         default:
                             //This is a valid SQL log entry carrying line which needs to go to both sql_log & analytics
-                            int log_id = LogIdGenerator.getNextId();
                             int user_id = usersMap.get(logLineBean.getUser_guid()).getUser_id();
                             int app_id = -1; //If no app_id found this will be -1
                             
@@ -157,16 +157,21 @@ public class LogParser {
                                 app_id = appsMap.get(appName).getApp_id();
                             }
                         
-                            Sql_log sql_log = new Sql_log(log_id, user_id, app_id, 
-                                    logLineBean.getLog_msg()); 
+                            Sql_log sql_log = new Sql_log(user_id, app_id, logLineBean.getLog_msg()); 
                             ps_SqlLog.write(sql_log);
                         
+                            AnalyticsGen analyticsGen = new AnalyticsGen(JSON_Obj, sql_log, logLineBean);
+                            ArrayList<Analytics> list_analytics = analyticsGen.generate();
+                            for(Analytics analytics : list_analytics){
+                                ps_Analytics.write(analytics);
+                            }
                             //TODO : <Sankar> Implement all the pausible ACTION and throw the Assertion for default
                             //throw new AssertionError();
                     }
                     parser.reset();
                 } else {
-                    extractUnparsableLine(_sourceFile, lineNumber, logLineBean.getLog_msg(), "LogLevel = " + logLineBean.getLog_level());
+                    extractUnparsableLine(_sourceFile, lineNumber, logLineBean.getLog_msg(), 
+                            "LogLevel = " + logLineBean.getLog_level());
                 }
                 
             }
@@ -177,13 +182,15 @@ public class LogParser {
             extractUnparsableLine(_sourceFile, lineNumber, logLine, "ArrayIndexOutOfBoundsException : Invalid number of columns in the Line");
         } 
         finally {
-            writer.close();
-            br.close();
+            if(br != null){
+                br.close();
+            }
         }
     }
     
     /**
-     * Extracts the user info from the filePath provided and adds to {@link LogParser#usersMap usersMap}<br>
+     * Extracts the user info from the filePath provided and adds 
+     *    to {@link LogParser#usersMap usersMap}<br>
      * User info is present at {@link LogParser#sourceDir sourceDir}+File.separator+"logcat"+File.separator+<b>[user_guid]</b>+File.separator+...<p>
      * Example: <br>
      * _filePath = /.../logcat/<b>0ee9cead2e2a3a58a316dc27571476e8973ff944</b>/tag/SQLite-Query-PhoneLab/2015/03/22.out.gz <br>
@@ -263,6 +270,7 @@ public class LogParser {
         persistCacheData();
         ps_UnparsedLogLines.close();
         ps_SqlLog.close();
+        ps_Analytics.close();
     }
     
     /*
