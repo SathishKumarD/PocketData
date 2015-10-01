@@ -10,17 +10,15 @@ import edu.ub.tbd.constants.AppConstants;
 import edu.ub.tbd.entity.Analytics;
 import edu.ub.tbd.entity.App;
 import edu.ub.tbd.entity.Sql_log;
+import edu.ub.tbd.entity.UnParsedSQLs;
 import edu.ub.tbd.entity.Unparsed_log_lines;
 import edu.ub.tbd.entity.User;
 import edu.ub.tbd.service.PersistanceFileService;
 import edu.ub.tbd.service.PersistanceService;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.InputStreamReader;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,10 +48,14 @@ public class LogParser {
     
     private final Pattern regx_userGUIDInFilePath; //Use find on this regx and get guid from group 1
     
-    //All Persistance Services below. They must be closed during shutdown
+    //All Persistance Services below. They must be closed during shutdown => in shutDown()
     private final PersistanceService ps_UnparsedLogLines;
     private final PersistanceService ps_SqlLog;
     private final PersistanceService ps_Analytics;
+    /**
+     * @deprecated 
+     */
+    private final PersistanceService ps_UnParsedSQLs;
     
     private String longestLine = null; //TODO: <Sankar> Remove in final release
     private int longestLineLength = 0; //TODO: <Sankar> Remove in final release
@@ -72,16 +74,19 @@ public class LogParser {
         
         this.ps_Analytics = new PersistanceFileService(AppConstants.DEST_FOLDER, 
                 AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Analytics.class);
+        
+        this.ps_UnParsedSQLs = new PersistanceFileService(AppConstants.DEST_FOLDER, 
+                AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, UnParsedSQLs.class);
     }
 
     public void parseLogsAndWriteFile() throws Exception{
         ArrayList<String> logFilesToProcess = getLogFilesToProcessFromBaseGZ();
         int counter = 0;
         for (String filePath : logFilesToProcess) {
-            System.out.println(filePath);
+            //System.out.println(filePath);
             counter += 1;
             //TODO: <Satish> remove this. For testing purpose I am just parsing two files.
-            if (counter < 2) {
+            if (counter < 10) {
                 parseSingleLogFile(filePath);
             }  
         }
@@ -120,72 +125,107 @@ public class LogParser {
         BufferedReader br = null;
         String logLine = null;
         int lineNumber = 0;
-
+        String raw_sql = "";
         try {
             
             GZIPInputStream gzip = new GZIPInputStream(new FileInputStream(_sourceFile));
             br = new BufferedReader(new InputStreamReader(gzip));
             
             //System.out.println(sourceFile);
-            
             while ((logLine = br.readLine()) != null) {
-                lineNumber++;
-                LogLineBean logLineBean = new LogLineBean(logLine.split(AppConstants.SRC_LOG_FILE_VALUE_SEPERATOR));
-                
-                //TODO: <Sankar> Check how WARN and other levels function
-                if(!LogLevel.ERROR.equals(logLineBean.getLog_level())){ //ERROR log level has no JSON to process
-                    String key = logLineBean.getUser_guid() + "_" + logLineBean.getProcess_id() + 
-                            "_" + logLineBean.getThread_id();
+                try {
                     
-                    JSONObject JSON_Obj = (JSONObject) parser.parse(logLineBean.getLog_msg());
+                    lineNumber++; raw_sql = "";
+                    LogLineBean logLineBean = new LogLineBean(logLine.split(AppConstants.SRC_LOG_FILE_VALUE_SEPERATOR));
 
-                    switch ((String) JSON_Obj.get("Action")) {
-                        case "APP_NAME":
-                            String appName = (String) JSON_Obj.get("AppName");
-                            this.appNameLookUpMap.put(key, appName);
-                            if(!appsMap.containsKey(appName)){
-                                appsMap.put(appName, new App(appName));
-                            }
-                            break;
-                        default:
-                            //This is a valid SQL log entry carrying line which needs to go to both sql_log & analytics
-                            int user_id = usersMap.get(logLineBean.getUser_guid()).getUser_id();
-                            int app_id = -1; //If no app_id found this will be -1
-                            
-                            if ((appName = this.appNameLookUpMap.get(key)) != null) {
-                                // I have an app name
-                                app_id = appsMap.get(appName).getApp_id();
-                            }
+                    //TODO: <Sankar> Check how WARN and other levels function
+                    if(LogLevel.INFO.equals(logLineBean.getLog_level())){ //Non-INFO log level has no JSON to process
+
+                        JSONObject JSON_Obj = (JSONObject) parser.parse(logLineBean.getLog_msg());
+
+                        switch ((String) JSON_Obj.get("Action")) {
+                            case "APP_NAME":
+                                {
+                                    String appName = (String) JSON_Obj.get("AppName");
+                                    String key = logLineBean.getUser_guid() + "_" + 
+                                            logLineBean.getProcess_id() + "_" + logLineBean.getThread_id();
+                                    this.appNameLookUpMap.put(key, appName);
+                                    if(!appsMap.containsKey(appName)){
+                                        appsMap.put(appName, new App(appName));
+                                    }
+                                }
+                                break;
+                            case "SCHEMA":
+                            case "TABLES":
+                                //TODO: <Professor> What are Actions : ["SCHEMA", "TABLES"]?
+                                //TODO: <Sankar> Actions : ["SCHEMA", "TABLES"] is not into Analytics table yet
+                                {
+                                    //This is a valid SQL log entry carrying line which needs to go to both sql_log & analytics
+                                    Sql_log sql_log = extractAndWriteSQL_Log(logLineBean);
+                                    raw_sql = (String) JSON_Obj.get("Results");
+                                }
+                                break;
+                            default:
+                                //This is a valid SQL log entry carrying line which needs to go to both sql_log & analytics
+                                Sql_log sql_log = extractAndWriteSQL_Log(logLineBean);
+                                raw_sql = (String) JSON_Obj.get("Results");
+                                
+                                AnalyticsGen analyticsGen = new AnalyticsGen(JSON_Obj, sql_log, logLineBean);
+                                ArrayList<Analytics> list_analytics = analyticsGen.generate();
+                                for(Analytics analytics : list_analytics){
+                                    ps_Analytics.write(analytics);
+                                }
+                                //TODO : <Sankar> Implement all the pausible ACTION and throw the Assertion for default
+                                //throw new AssertionError();
+                        }
                         
-                            Sql_log sql_log = new Sql_log(user_id, app_id, logLineBean.getLog_msg()); 
-                            ps_SqlLog.write(sql_log);
-                        
-                            AnalyticsGen analyticsGen = new AnalyticsGen(JSON_Obj, sql_log, logLineBean);
-                            ArrayList<Analytics> list_analytics = analyticsGen.generate();
-                            for(Analytics analytics : list_analytics){
-                                ps_Analytics.write(analytics);
-                            }
-                            //TODO : <Sankar> Implement all the pausible ACTION and throw the Assertion for default
-                            //throw new AssertionError();
+                    } else {
+                        logtUnparsableLine(_sourceFile, lineNumber, logLineBean.getLog_msg(), 
+                                "LogLevel = " + logLineBean.getLog_level());
                     }
+                    
+                } catch (ParseException e) {
+                    //System.out.println("LogLine : " + logLine);
+                    logUnparsableLine(_sourceFile, lineNumber, logLine);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    //System.out.println("LogLine : " + logLine);
+                    logtUnparsableLine(_sourceFile, lineNumber, logLine, "ArrayIndexOutOfBoundsException : Invalid number of columns in the Line");
+                } catch (net.sf.jsqlparser.parser.ParseException e) {
+                    logUnparsedSQLs(_sourceFile, lineNumber, raw_sql);
+                } catch (Throwable e) {
+                    System.out.println("WEIRD_EXCEPTION | SQL: " + raw_sql);
+                    logUnparsedSQLs(_sourceFile, lineNumber, raw_sql); //TODO: <Sankar> Remove this catch and leave the below catch Throwable after most of the issues are fixed
+                } finally {
                     parser.reset();
-                } else {
-                    extractUnparsableLine(_sourceFile, lineNumber, logLineBean.getLog_msg(), 
-                            "LogLevel = " + logLineBean.getLog_level());
                 }
-                
             }
-            
-        } catch (ParseException e) {
-            extractUnparsableLine(_sourceFile, lineNumber, logLine);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            extractUnparsableLine(_sourceFile, lineNumber, logLine, "ArrayIndexOutOfBoundsException : Invalid number of columns in the Line");
-        } 
+        } catch (Throwable e) {
+            System.out.println("Unknown Exception/Error | LogLine : " + logLine);
+            throw e;
+        }
         finally {
             if(br != null){
                 br.close();
             }
         }
+    }
+    
+    private Sql_log extractAndWriteSQL_Log(LogLineBean _logLineBean) throws Exception{
+        int user_id = usersMap.get(_logLineBean.getUser_guid()).getUser_id();
+        int app_id = -1; //If no app_id found this will be -1
+        String key = _logLineBean.getUser_guid() + "_" + _logLineBean.getProcess_id() + 
+                            "_" + _logLineBean.getThread_id();
+        
+        String appName = "";
+        if ((appName = this.appNameLookUpMap.get(key)) != null) {
+            // I have an app name
+            app_id = appsMap.get(appName).getApp_id();
+        }
+
+        Sql_log sql_log = new Sql_log(user_id, app_id, _logLineBean.getLog_msg()); 
+        ps_SqlLog.write(sql_log);
+        
+        return sql_log;
     }
     
     /**
@@ -207,7 +247,7 @@ public class LogParser {
         }
     }
     
-    private void extractUnparsableLine(String _file_location, int _file_line_number, 
+    private void logtUnparsableLine(String _file_location, int _file_line_number, 
             String _raw_data,  String _exception_trace) throws Exception
     {
         
@@ -217,10 +257,16 @@ public class LogParser {
         ps_UnparsedLogLines.write(unparsedLogLine);
     }
     
-    private void extractUnparsableLine(String _file_location, int _file_line_number, 
+    private void logUnparsableLine(String _file_location, int _file_line_number, 
             String _raw_data) throws Exception
     {
-        extractUnparsableLine(_file_location, _file_line_number, _raw_data, " ");
+        logtUnparsableLine(_file_location, _file_line_number, _raw_data, " ");
+    }
+    
+    private void logUnparsedSQLs(String _file_location, int _file_line_number, 
+            String _raw_sql) throws Exception
+    {
+        ps_UnParsedSQLs.write(new UnParsedSQLs(_file_location, _file_line_number, _raw_sql));
     }
     
     /**
@@ -271,6 +317,8 @@ public class LogParser {
         ps_UnparsedLogLines.close();
         ps_SqlLog.close();
         ps_Analytics.close();
+        ps_UnParsedSQLs.close();
+        System.out.println("PRAGMA COUNT = " + AnalyticsGen.PRAGMA_COUNT);
     }
     
     /*

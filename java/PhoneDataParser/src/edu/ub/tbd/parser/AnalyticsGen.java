@@ -15,6 +15,7 @@ import java.util.List;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.pragma.Pragma;
 import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.AllTableColumns;
 import net.sf.jsqlparser.statement.select.PlainSelect;
@@ -23,7 +24,9 @@ import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.select.SelectItemVisitor;
 import net.sf.jsqlparser.statement.select.SelectVisitor;
-import net.sf.jsqlparser.statement.select.Union;
+import net.sf.jsqlparser.statement.select.SetOperation;
+import net.sf.jsqlparser.statement.select.SetOperationList;
+import net.sf.jsqlparser.statement.select.WithItem;
 import org.json.simple.JSONObject;
 
 /**
@@ -37,6 +40,7 @@ public class AnalyticsGen {
     private final Analytics parent_analytics;
     private final ArrayList<Analytics> list_analytics = new ArrayList<>();
     private final LogLineBean logLineBean;
+    public static int PRAGMA_COUNT = 0;
 
     public AnalyticsGen(JSONObject _JSON_Obj, Sql_log _sql_log, LogLineBean _logLineBean) {
         this.JSON_Obj = _JSON_Obj;
@@ -55,7 +59,7 @@ public class AnalyticsGen {
         try {
             stmt = parser.Statement();
         } catch (ParseException e) {
-            System.out.println("Unable to Parse SQL : \n" + sql_raw);
+            //System.out.println("Unable to Parse SQL : \n" + sql_raw);
             throw e;
         }
         
@@ -65,6 +69,10 @@ public class AnalyticsGen {
                 SelectUnionParser su_parser = new SelectUnionParser();
                 select.getSelectBody().accept(su_parser);
                 su_parser.populateAnalyticsEntity(parent_analytics);
+            } else if (stmt instanceof Pragma){
+                Pragma pragma = (Pragma) stmt; //REFER: PRAGMA Grammar => https://www.sqlite.org/pragma.html#pragma_table_info
+                parent_analytics.setQuery_type("PRAGMA");
+                PRAGMA_COUNT++;
             } else {
                 throw new IncompleteLogicError("Handle other statement types");
             }
@@ -84,7 +92,11 @@ public class AnalyticsGen {
         out.setTime_taken((Long) JSON_Obj.get("Time"));
         out.setArguments((String) JSON_Obj.get("Arguments"));
         out.setCounter(((Number) JSON_Obj.get("Counter")).intValue());
-        out.setRows_returned(((Number) JSON_Obj.get("Rows returned")).intValue());
+        
+        Number jsonRowsReturnedValue = (Number) JSON_Obj.get("Rows returned"); // The JSON need not have rows returned for all log lines. Ex: DELETE
+        out.setRows_returned((jsonRowsReturnedValue != null) ? 
+                jsonRowsReturnedValue.intValue() : 0);
+        
         out.setUser_id(sql_log.getUser_id());
         out.setApp_id(sql_log.getApp_id());
         out.setSql_log_id(sql_log.getSql_log_id());
@@ -125,12 +137,6 @@ public class AnalyticsGen {
         }
 
         @Override
-        public void visit(Union _union) {
-            numberOfUnion++;
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        @Override
         public void visit(AllColumns _ac) {
             project_star_count = 0;
         }
@@ -143,6 +149,24 @@ public class AnalyticsGen {
         @Override
         public void visit(SelectExpressionItem _sei) {
             numberOfProjectItems++;
+        }
+
+        @Override
+        public void visit(SetOperationList _sol) {
+            List<SetOperation> setOps = _sol.getOperations();
+            for(SetOperation setOp : setOps){
+                if(setOp.toString().equalsIgnoreCase("UNION")){
+                    numberOfUnion++;
+                    throw new IncompleteLogicError("UNION is not completely implmented yet");
+                } else {
+                    throw new UnsupportedOperationException("Set Op: "+ setOp.toString() + " Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+            }
+        }
+
+        @Override
+        public void visit(WithItem _wi) {
+            throw new UnsupportedOperationException("With is Not supported yet.");
         }
         
     }

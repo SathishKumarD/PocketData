@@ -38,7 +38,7 @@ public class Main {
                 System.out.println("Start up of the application failed");
             }
             
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             if(logParser != null){
                 try {
