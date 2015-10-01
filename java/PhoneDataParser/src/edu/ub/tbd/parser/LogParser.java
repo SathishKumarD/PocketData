@@ -64,7 +64,7 @@ public class LogParser {
         this.sourceDir = _sourceDir;
         this.fileExtension = _fileExtension;
         regx_userGUIDInFilePath = Pattern.compile(sourceDir + File.separator +
-                 "(\\p{Alnum}+)" + File.separator);
+                "logcat" + File.separator + "(\\p{Alnum}+)" + File.separator);
         
         this.ps_UnparsedLogLines = new PersistanceFileService(AppConstants.DEST_FOLDER, 
                 AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Unparsed_log_lines.class);
@@ -236,7 +236,6 @@ public class LogParser {
      */
     private void extractUser(String _filePath){
         Matcher m = regx_userGUIDInFilePath.matcher(_filePath);
-        System.out.println(regx_userGUIDInFilePath);
         if(m.find()){
             String user_guid = m.group(1);
             if(!usersMap.containsKey(user_guid)){
@@ -344,6 +343,22 @@ public class LogParser {
             }
         }
         br.close();
+    }
+ 
+    public static void main(String[] args) {
+        LogParser lp = null;
+        try {
+            lp = new LogParser(AppConstants.SRC_DIR, AppConstants.SRC_LOG_FILE_EXT);
+            ArrayList<String> logFilesToProcess = lp.getLogFilesToProcessFromBaseGZ();
+            for (String filePath : logFilesToProcess) {
+                lp.extractUser(filePath);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        for(User user : lp.usersMap.values()){
+            System.out.println(user.getGuid() + " | " + user.getUser_name());
+        }
     }
     
 }
