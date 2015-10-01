@@ -112,5 +112,11 @@ public class LogLineBean {
         this.log_msg = _log_msg;
     }
     
+    public String get_app_key()
+    {
+      return  this.getUser_guid() + "_" + this.getProcess_id() + 
+                            "_" + this.getThread_id();
+    }
+    
     
 }

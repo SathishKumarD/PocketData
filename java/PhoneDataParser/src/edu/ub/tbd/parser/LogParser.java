@@ -64,7 +64,7 @@ public class LogParser {
         this.sourceDir = _sourceDir;
         this.fileExtension = _fileExtension;
         regx_userGUIDInFilePath = Pattern.compile(sourceDir + File.separator +
-                "logcat" + File.separator + "(\\p{Alnum}+)" + File.separator);
+                 "(\\p{Alnum}+)" + File.separator);
         
         this.ps_UnparsedLogLines = new PersistanceFileService(AppConstants.DEST_FOLDER, 
                 AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Unparsed_log_lines.class);
@@ -86,9 +86,8 @@ public class LogParser {
             //System.out.println(filePath);
             counter += 1;
             //TODO: <Satish> remove this. For testing purpose I am just parsing two files.
-            if (counter < 10) {
-                parseSingleLogFile(filePath);
-            }  
+            parseSingleLogFile(filePath);
+           
         }
     }
     
@@ -147,8 +146,7 @@ public class LogParser {
                             case "APP_NAME":
                                 {
                                     String appName = (String) JSON_Obj.get("AppName");
-                                    String key = logLineBean.getUser_guid() + "_" + 
-                                            logLineBean.getProcess_id() + "_" + logLineBean.getThread_id();
+                                    String key = logLineBean.get_app_key();
                                     this.appNameLookUpMap.put(key, appName);
                                     if(!appsMap.containsKey(appName)){
                                         appsMap.put(appName, new App(appName));
@@ -213,8 +211,7 @@ public class LogParser {
     private Sql_log extractAndWriteSQL_Log(LogLineBean _logLineBean) throws Exception{
         int user_id = usersMap.get(_logLineBean.getUser_guid()).getUser_id();
         int app_id = -1; //If no app_id found this will be -1
-        String key = _logLineBean.getUser_guid() + "_" + _logLineBean.getProcess_id() + 
-                            "_" + _logLineBean.getThread_id();
+        String key = _logLineBean.get_app_key();
         
         String appName = "";
         if ((appName = this.appNameLookUpMap.get(key)) != null) {
@@ -239,6 +236,7 @@ public class LogParser {
      */
     private void extractUser(String _filePath){
         Matcher m = regx_userGUIDInFilePath.matcher(_filePath);
+        System.out.println(regx_userGUIDInFilePath);
         if(m.find()){
             String user_guid = m.group(1);
             if(!usersMap.containsKey(user_guid)){
