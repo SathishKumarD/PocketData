@@ -63,8 +63,8 @@ public class LogParser {
     public LogParser(String _sourceDir, String _fileExtension) throws Exception{
         this.sourceDir = _sourceDir;
         this.fileExtension = _fileExtension;
-        regx_userGUIDInFilePath = Pattern.compile(sourceDir + File.separator +
-                "logcat" + File.separator + "(\\p{Alnum}+)" + File.separator);
+        regx_userGUIDInFilePath = Pattern.compile(sourceDir //+ File.separator + "logcat"
+                 + File.separator + "(\\p{Alnum}+)" + File.separator);
         
         this.ps_UnparsedLogLines = new PersistanceFileService(AppConstants.DEST_FOLDER, 
                 AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Unparsed_log_lines.class);
@@ -86,7 +86,11 @@ public class LogParser {
             //System.out.println(filePath);
             counter += 1;
             //TODO: <Satish> remove this. For testing purpose I am just parsing two files.
-            parseSingleLogFile(filePath);
+            if(counter < 2){
+                parseSingleLogFile(filePath);
+            }
+                
+
            
         }
     }
@@ -124,7 +128,7 @@ public class LogParser {
         BufferedReader br = null;
         String logLine = null;
         int lineNumber = 0;
-        String raw_sql = "";
+        
         try {
             
             GZIPInputStream gzip = new GZIPInputStream(new FileInputStream(_sourceFile));
@@ -132,9 +136,8 @@ public class LogParser {
             
             //System.out.println(sourceFile);
             while ((logLine = br.readLine()) != null) {
+                lineNumber++; String raw_sql = "";
                 try {
-                    
-                    lineNumber++; raw_sql = "";
                     LogLineBean logLineBean = new LogLineBean(logLine.split(AppConstants.SRC_LOG_FILE_VALUE_SEPERATOR));
 
                     //TODO: <Sankar> Check how WARN and other levels function
@@ -192,6 +195,7 @@ public class LogParser {
                     logUnparsedSQLs(_sourceFile, lineNumber, raw_sql);
                 } catch (Throwable e) {
                     System.out.println("WEIRD_EXCEPTION | SQL: " + raw_sql);
+//                    e.printStackTrace();
                     logUnparsedSQLs(_sourceFile, lineNumber, raw_sql); //TODO: <Sankar> Remove this catch and leave the below catch Throwable after most of the issues are fixed
                 } finally {
                     parser.reset();

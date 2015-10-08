@@ -25,7 +25,8 @@ public class Main {
         LogParser logParser = null;
         try {
             if(startUp()){
-                logParser = new LogParser(AppConstants.SRC_DIR, AppConstants.SRC_LOG_FILE_EXT);
+                String srcDIR = AppConstants.SRC_DIR; //Leave this. It helps in reducing Class unload cache. Talk to Sankar before u remove this
+                logParser = new LogParser(srcDIR, AppConstants.SRC_LOG_FILE_EXT);
                 logParser.parseLogsAndWriteFile();
                 
                 try {

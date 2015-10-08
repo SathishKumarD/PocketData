@@ -9,12 +9,16 @@ import edu.ub.tbd.beans.LogLineBean;
 import edu.ub.tbd.entity.Analytics;
 import edu.ub.tbd.entity.Sql_log;
 import edu.ub.tbd.exceptions.IncompleteLogicError;
+import edu.ub.tbd.util.ParserUtil;
+import edu.ub.tbd.util.SQLCleanUp;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.delete.Delete;
+import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.pragma.Pragma;
 import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.AllTableColumns;
@@ -27,6 +31,7 @@ import net.sf.jsqlparser.statement.select.SelectVisitor;
 import net.sf.jsqlparser.statement.select.SetOperation;
 import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.select.WithItem;
+import net.sf.jsqlparser.statement.update.Update;
 import org.json.simple.JSONObject;
 
 /**
@@ -52,7 +57,14 @@ public class AnalyticsGen {
     
     public ArrayList<Analytics> generate() throws ParseException, Exception{
         String sql_raw = (String) JSON_Obj.get("Results");
-        StringReader stream = new StringReader(sql_raw);
+        String argumentsHashCoded = (String) JSON_Obj.get("Arguments(hashCoded)");
+        String arguments = (String) JSON_Obj.get("Arguments");
+        
+        
+        
+        String sql_CleanedUp = SQLCleanUp.cleanUpSQL(sql_raw, argumentsHashCoded, arguments);
+        
+        StringReader stream = new StringReader(sql_CleanedUp);
         CCJSqlParser parser = new CCJSqlParser(stream);
         
         Statement stmt = null;
@@ -69,6 +81,12 @@ public class AnalyticsGen {
                 SelectUnionParser su_parser = new SelectUnionParser();
                 select.getSelectBody().accept(su_parser);
                 su_parser.populateAnalyticsEntity(parent_analytics);
+            } else if (stmt instanceof Delete) {
+                //TODO: <Sankar> Implement this
+            } else if (stmt instanceof Update) {
+                //TODO: <Sankar> Implement this
+            } else if (stmt instanceof Insert) {
+                //TODO: <Sankar> Implement this
             } else if (stmt instanceof Pragma){
                 Pragma pragma = (Pragma) stmt; //REFER: PRAGMA Grammar => https://www.sqlite.org/pragma.html#pragma_table_info
                 parent_analytics.setQuery_type("PRAGMA");
