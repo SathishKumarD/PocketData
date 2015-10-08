@@ -22,6 +22,16 @@ public class Main {
      * @param args the command line arguments [-v|V] [-help] [-p "mode"]
      */
     public static void main(String[] args) {
+        
+        for(int i = 0; i < args.length; i++){
+            if (args[i].equals("--src")) {
+                AppConstants.SRC_DIR = args[i+1];
+            }
+            if (args[i].equals("--dest")) {
+                AppConstants.DEST_FOLDER = args[i+1];
+            }
+        }
+        
         LogParser logParser = null;
         try {
             if(startUp()){

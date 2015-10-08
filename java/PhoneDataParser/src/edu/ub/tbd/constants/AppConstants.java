@@ -10,8 +10,8 @@ package edu.ub.tbd.constants;
  * @author san
  */
 public class AppConstants {
-    public final static String SRC_DIR = "/Users/san/UB/CSE-662/Project/DataSet/logcat";
-    public final static String DEST_FOLDER = "/Users/san/UB/CSE-662/Project/Run/OUTPUT";
+    public static String SRC_DIR = "/Users/san/UB/CSE-662/Project/DataSet/logcat";
+    public static String DEST_FOLDER = "/Users/san/UB/CSE-662/Project/Run/OUTPUT";
     public final static String DEST_FILE = "insert_analytics_data.sql";
     
     public final static String SRC_LOG_FILE_EXT = ".gz";
