@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -28,12 +30,21 @@ public class LogAnalyzer {
     String fileExtension;
     String logFilePath;
     HashMap<String, String> appNamesMap;
+    
+    private Pattern pattern;
+	private Matcher matcher;
+
+	private static final String EMAIL_PATTERN = 
+		"^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
+		+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+
 
     public LogAnalyzer(String sourceDir, String fileExtension, String logFilePath) {
         this.sourceDir = sourceDir;
         this.fileExtension = fileExtension;
         this.logFilePath = logFilePath;
         this.appNamesMap = new HashMap<>();
+        pattern = Pattern.compile(EMAIL_PATTERN);
     }
 
     public void parseLogsAndWriteFile() {
@@ -43,9 +54,10 @@ public class LogAnalyzer {
             //System.out.println(filePath);
             counter += 1;
             // remove this. For testing purpose I am just parsing two files.
-            if (counter < 3) {
-                accessGZfile(filePath);
-            }
+            
+                //accessGZfile(filePath);
+                writeEmailLogDetails(filePath);
+
         }
     }
     
@@ -111,5 +123,55 @@ public class LogAnalyzer {
         } finally {
 
         }
+    }
+    
+    private void writeEmailLogDetails(String sourceFile)
+    {
+        Writer writer = null;
+        int counter = 0;
+
+        try {
+            GZIPInputStream gzip = new GZIPInputStream(new FileInputStream(sourceFile));
+            BufferedReader br = new BufferedReader(new InputStreamReader(gzip));
+            String logLine = null;
+            writer = new BufferedWriter(new FileWriter(this.logFilePath, true));
+            System.out.println(sourceFile);
+            while ((logLine = br.readLine()) != null) {
+            	String appName = null;
+                String[] segments = logLine.split("\t");
+                // segments[0] - user id
+                // segments[5] - process id
+                // segments[6] - thread id
+                String key = segments[0] + '_' + segments[5] + '_' + segments[6];
+                if (logLine.contains("\"Action\":\"APP_NAME\"")) {
+                    JSONParser parser = new JSONParser();
+                    JSONObject obj = (JSONObject) parser.parse(segments[8]);
+                    appName = (String) obj.get("AppName");
+                    this.appNamesMap.put(key, appName);
+                } else if ( logLine.contains("@gmail.com"))
+                    
+                    if(  (appName = this.appNamesMap.get(key)) != null) {
+                    
+                    // I have an app name
+                    writer.write(appName+"\t");
+                    writer.write(logLine);
+                    writer.write("\n");
+                    } else {
+
+                        // :( I don't have an appname
+                        writer.write("\t\t");
+                        writer.write(logLine);
+                        writer.write("\n");
+                    }
+            }
+
+            writer.close();
+
+        } catch (Exception e) {
+
+        } finally {
+
+        }
+        
     }
 }

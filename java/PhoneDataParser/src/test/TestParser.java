@@ -14,8 +14,8 @@ import phonedataparser.LogAnalyzer;
  */
 public class TestParser {
 	
-	private static String srcDir = "C:\\Users\\Saravanan\\Downloads\\DB - 662\\project\\output";
-	private static String outFilePath = "/Users/sathish/Dropbox/UB_Fall_2015/662- DB/code/sql/data/insert_analytics_data.sql";
+	private static String srcDir = "/Users/sathish/Desktop/logcat";
+	private static String outFilePath = "/Users/sathish/Dropbox/UB_Fall_2015/662- DB/code/sql/data/emailinfo.log";
 	
     public static void test_getFiles() {
         LogAnalyzer logger = new LogAnalyzer(srcDir, ".gz", outFilePath);
@@ -26,7 +26,6 @@ public class TestParser {
         		System.out.println(path);
             }
         }
-        
     }
     
     public static void testParseLogsAndWriteFile() {
