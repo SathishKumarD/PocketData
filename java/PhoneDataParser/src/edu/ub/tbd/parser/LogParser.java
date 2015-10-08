@@ -91,10 +91,7 @@ public class LogParser {
             //TODO: <Satish> remove this. For testing purpose I am just parsing two files.
             //if(counter < 2)
             parseSingleLogFile(filePath);
-            
-                
-
-           
+   
         }
     }
     
