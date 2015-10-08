@@ -17,12 +17,12 @@ CREATE SCHEMA IF NOT EXISTS pocket_data;
 
 use pocket_data;
 
-DROP TABLE user;
-DROP TABLE app;
-DROP TABLE sql_log;
-DROP TABLE analytics;
-DROP TABLE unparsed_log_lines;
-DROP TABLE primary_key_sequence;
+DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS app;
+DROP TABLE IF EXISTS sql_log;
+DROP TABLE IF EXISTS analytics;
+DROP TABLE IF EXISTS unparsed_log_lines;
+DROP TABLE IF EXISTS primary_key_sequence ;
 
 CREATE TABLE IF NOT EXISTS user(
 user_id 			INT NOT NULL,
