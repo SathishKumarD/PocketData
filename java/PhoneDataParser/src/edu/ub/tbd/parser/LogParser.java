@@ -63,8 +63,7 @@ public class LogParser {
     public LogParser(String _sourceDir, String _fileExtension) throws Exception{
         this.sourceDir = _sourceDir;
         this.fileExtension = _fileExtension;
-        regx_userGUIDInFilePath = Pattern.compile(sourceDir //+ File.separator + "logcat"
-                 + File.separator + "(\\p{Alnum}+)" + File.separator);
+        regx_userGUIDInFilePath = Pattern.compile(sourceDir.replaceAll("\\\\", "\\\\") + File.separator.replaceAll("\\\\", "\\\\") + "(\\p{Alnum}+)" + File.separator.replaceAll("\\\\", "\\\\"));
         
         this.ps_UnparsedLogLines = new PersistanceFileService(AppConstants.DEST_FOLDER, 
                 AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Unparsed_log_lines.class);
