@@ -114,9 +114,8 @@ public class LogLineBean {
     
     public String get_app_key()
     {
-      return  this.getUser_guid() + "_" + this.getProcess_id() + 
-                            "_" + this.getThread_id();
+      return  this.getUser_guid() + "_" + this.getProcess_id();                        
     }
     
-    
+
 }
