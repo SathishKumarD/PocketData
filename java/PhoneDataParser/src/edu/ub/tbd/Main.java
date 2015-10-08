@@ -7,9 +7,11 @@ package edu.ub.tbd;
 
 import edu.ub.tbd.constants.AppConstants;
 import edu.ub.tbd.parser.LogParser;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 /**
  * This is the driver class of the Phone Data Parser when invoked using jar or command line
@@ -77,9 +79,14 @@ public class Main {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         try {
             if(destinationFolder.exists()){
-                String [] filesInOUTFolder = destinationFolder.list(
-                        (File _dir, String _fileName) -> _fileName.endsWith(AppConstants.OUTPUT_FILE_EXT));
-                if(filesInOUTFolder != null && filesInOUTFolder.length > 0){
+                int destFileCount = 0;
+                for(File file : destinationFolder.listFiles()) {
+                	if(file.getName().endsWith(AppConstants.OUTPUT_FILE_EXT)) {
+                		destFileCount++;
+                	}
+                }
+                
+                if(destFileCount > 0){
                     System.out.println("Destination folder \"" + AppConstants.DEST_FOLDER + "\" already has prior run files. \nWould you like to append the new run? \nY --> Continue\nN --> Abort");
                     String input = null;
                     while((input = br.readLine()) != null){
