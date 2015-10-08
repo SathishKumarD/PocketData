@@ -27,10 +27,12 @@ public class Main {
         
         for(int i = 0; i < args.length; i++){
             if (args[i].equals("--src")) {
-                AppConstants.SRC_DIR = args[i+1];
+            	String sourDir = args[i+1];
+                AppConstants.SRC_DIR = sourDir;
             }
             if (args[i].equals("--dest")) {
-                AppConstants.DEST_FOLDER = args[i+1];
+            	String destFolder = args[i+1];
+                AppConstants.DEST_FOLDER = destFolder;
             }
         }
         
