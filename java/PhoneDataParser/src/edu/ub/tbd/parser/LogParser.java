@@ -89,9 +89,9 @@ public class LogParser {
             //System.out.println(filePath);
             counter += 1;
             //TODO: <Satish> remove this. For testing purpose I am just parsing two files.
-            if(counter < 2){
-                parseSingleLogFile(filePath);
-            }
+            //if(counter < 2)
+            parseSingleLogFile(filePath);
+            
                 
 
            
@@ -352,20 +352,6 @@ public class LogParser {
         br.close();
     }
  
-    public static void main(String[] args) {
-        LogParser lp = null;
-        try {
-            lp = new LogParser(AppConstants.SRC_DIR, AppConstants.SRC_LOG_FILE_EXT);
-            ArrayList<String> logFilesToProcess = lp.getLogFilesToProcessFromBaseGZ();
-            for (String filePath : logFilesToProcess) {
-                lp.extractUser(filePath);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        for(User user : lp.usersMap.values()){
-            System.out.println(user.getGuid() + " | " + user.getUser_name());
-        }
-    }
+   
     
 }
