@@ -11,9 +11,13 @@ import edu.ub.tbd.entity.Sql_log;
 import edu.ub.tbd.exceptions.IncompleteLogicError;
 import edu.ub.tbd.util.ParserUtil;
 import edu.ub.tbd.util.SQLCleanUp;
+
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+
+import net.sf.jsqlparser.expression.Alias;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
@@ -22,6 +26,8 @@ import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.pragma.Pragma;
 import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.AllTableColumns;
+import net.sf.jsqlparser.statement.select.FromItem;
+import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectExpressionItem;
@@ -32,6 +38,7 @@ import net.sf.jsqlparser.statement.select.SetOperation;
 import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.select.WithItem;
 import net.sf.jsqlparser.statement.update.Update;
+
 import org.json.simple.JSONObject;
 
 /**
@@ -152,6 +159,57 @@ public class AnalyticsGen {
             for(SelectItem selectItem : selectItems){
                 selectItem.accept(this);
             }
+            
+            int joinWidth = 0;
+            if(_ps.getJoins() != null) {
+            	joinWidth = _ps.getJoins().size();
+            }
+            parent_analytics.setJoin_width(joinWidth);
+            
+            int noOfTables = 1;
+            if(joinWidth > 0) {
+            	HashSet<String> set = new HashSet<>();
+            	int crossProduct = 0;
+            	int innerJoin = 0;
+            	int leftOuterJoin = 0;
+            	int naturalJoin = 0;
+            	int outerJoin = 0;
+            	int rightOuterJoin = 0;
+            	int simpleJoin = 0;
+            	
+            	for(Join join : _ps.getJoins()) {
+            		set.add(_ps.getFromItem().toString());
+            		set.add(join.getRightItem().toString());
+            		
+            		if(join.isLeft()) {
+        				leftOuterJoin++;
+        			} else if(join.isRight()) {
+        				rightOuterJoin++;
+        			} else if(join.isOuter() || join.isFull()){
+        				outerJoin++;
+        			} else if(join.isSimple()) {
+            			simpleJoin++;
+            		} else if(join.isNatural()) {
+            			naturalJoin++;
+            		} else if(join.isCross()) {
+            			crossProduct++;
+            		} else {
+            			// CASE: R1 JOIN R2 ON (R1.C1 = R2.C2)
+            			innerJoin++;
+            		} 
+            	}
+            	noOfTables = set.size();
+            	
+            	parent_analytics.setOuterjoin_count(outerJoin);
+            	parent_analytics.setLeftOuterJoin_count(leftOuterJoin);
+            	parent_analytics.setRightOuterJoint_count(rightOuterJoin);
+            	parent_analytics.setSimpleJoin_count(simpleJoin);
+            	parent_analytics.setNaturalJoin_count(naturalJoin);
+            	parent_analytics.setCrossJoin_count(crossProduct);
+            	parent_analytics.setInnerJoin_count(innerJoin);
+            }
+            
+        	parent_analytics.setNoOfRelations(noOfTables);
         }
 
         @Override

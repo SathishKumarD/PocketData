@@ -43,7 +43,15 @@ public class Analytics extends AbstractEntity implements Comparable<Analytics>{
     @Column public int where_count;
     @Column public int project_col_count;
     @Column public int project_star_count; // -1 -> No * in the Project; 0 -> SELECT * FROM.. (All Columns); 1 -> SELLECT A.*, B.NAME, ...; 2 -> A.*, B.*, C.NAME, ...
-
+    @Column public int noOfRelations;
+	@Column public int leftOuterJoin_count;
+    @Column public int rightOuterJoint_count;
+    @Column public int innerJoin_count;
+    @Column public int simpleJoin_count;
+    @Column public int crossJoin_count;
+    @Column public int naturalJoin_count;
+    
+    
     /**
      * Not upto date with instance variables
      * @deprecated 
@@ -339,5 +347,61 @@ public class Analytics extends AbstractEntity implements Comparable<Analytics>{
     public void setProject_star_count(int _project_star_count) {
         this.project_star_count = _project_star_count;
     }
+    
+    public int getNoOfRelations() {
+		return noOfRelations;
+	}
+
+	public void setNoOfRelations(int noOfRelations) {
+		this.noOfRelations = noOfRelations;
+	}
+
+	public int getLeftOuterJoin_count() {
+		return leftOuterJoin_count;
+	}
+
+	public void setLeftOuterJoin_count(int leftOuterJoin_count) {
+		this.leftOuterJoin_count = leftOuterJoin_count;
+	}
+
+	public int getRightOuterJoint_count() {
+		return rightOuterJoint_count;
+	}
+
+	public void setRightOuterJoint_count(int rightOuterJoint_count) {
+		this.rightOuterJoint_count = rightOuterJoint_count;
+	}
+
+	public int getInnerJoin_count() {
+		return innerJoin_count;
+	}
+
+	public void setInnerJoin_count(int innerJoin_count) {
+		this.innerJoin_count = innerJoin_count;
+	}
+
+	public int getSimpleJoin_count() {
+		return simpleJoin_count;
+	}
+
+	public void setSimpleJoin_count(int simpleJoin_count) {
+		this.simpleJoin_count = simpleJoin_count;
+	}
+
+	public int getCrossJoin_count() {
+		return crossJoin_count;
+	}
+
+	public void setCrossJoin_count(int crossJoin_count) {
+		this.crossJoin_count = crossJoin_count;
+	}
+
+	public int getNaturalJoin_count() {
+		return naturalJoin_count;
+	}
+
+	public void setNaturalJoin_count(int naturalJoin_count) {
+		this.naturalJoin_count = naturalJoin_count;
+	}
 
 }
