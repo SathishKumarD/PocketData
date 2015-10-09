@@ -194,7 +194,7 @@ public class LogParser {
                 } catch (net.sf.jsqlparser.parser.ParseException e) {
                     logUnparsedSQLs(_sourceFile, lineNumber, raw_sql);
                 } catch (Throwable e) {
-                    System.out.println("WEIRD_EXCEPTION | SQL: " + raw_sql);
+                    //System.out.println("WEIRD_EXCEPTION | SQL: " + raw_sql);
 //                    e.printStackTrace();
                     logUnparsedSQLs(_sourceFile, lineNumber, raw_sql); //TODO: <Sankar> Remove this catch and leave the below catch Throwable after most of the issues are fixed
                 } finally {

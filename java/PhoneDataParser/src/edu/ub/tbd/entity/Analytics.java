@@ -44,7 +44,7 @@ public class Analytics extends AbstractEntity implements Comparable<Analytics>{
     @Column public int project_col_count;
     @Column public int project_star_count; // -1 -> No * in the Project; 0 -> SELECT * FROM.. (All Columns); 1 -> SELLECT A.*, B.NAME, ...; 2 -> A.*, B.*, C.NAME, ...
     @Column public int noOfRelations;
-	@Column public int leftOuterJoin_count;
+    @Column public int leftOuterJoin_count;
     @Column public int rightOuterJoint_count;
     @Column public int innerJoin_count;
     @Column public int simpleJoin_count;

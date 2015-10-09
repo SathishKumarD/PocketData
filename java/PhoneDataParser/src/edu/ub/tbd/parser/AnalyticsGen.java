@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import net.sf.jsqlparser.expression.Alias;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
@@ -34,9 +33,10 @@ import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.select.SelectItemVisitor;
 import net.sf.jsqlparser.statement.select.SelectVisitor;
-import net.sf.jsqlparser.statement.select.SetOperation;
-import net.sf.jsqlparser.statement.select.SetOperationList;
-import net.sf.jsqlparser.statement.select.WithItem;
+import net.sf.jsqlparser.statement.select.Union;
+//import net.sf.jsqlparser.statement.select.SetOperation;
+//import net.sf.jsqlparser.statement.select.SetOperationList;
+//import net.sf.jsqlparser.statement.select.WithItem;
 import net.sf.jsqlparser.statement.update.Update;
 
 import org.json.simple.JSONObject;
@@ -176,7 +176,7 @@ public class AnalyticsGen {
             	int outerJoin = 0;
             	int rightOuterJoin = 0;
             	int simpleJoin = 0;
-            	
+                
             	for(Join join : _ps.getJoins()) {
             		set.add(_ps.getFromItem().toString());
             		set.add(join.getRightItem().toString());
@@ -191,9 +191,9 @@ public class AnalyticsGen {
             			simpleJoin++;
             		} else if(join.isNatural()) {
             			naturalJoin++;
-            		} else if(join.isCross()) {
+            		} /*else if(join.isCross()) {
             			crossProduct++;
-            		} else {
+            		}*/ else {
             			// CASE: R1 JOIN R2 ON (R1.C1 = R2.C2)
             			innerJoin++;
             		} 
@@ -228,6 +228,13 @@ public class AnalyticsGen {
         }
 
         @Override
+        public void visit(Union _union) {
+            numberOfUnion++;
+            //throw new UnsupportedOperationException("Not supported yet."); //TODO - Fix me 
+        }
+        
+        /*
+        @Override
         public void visit(SetOperationList _sol) {
             List<SetOperation> setOps = _sol.getOperations();
             for(SetOperation setOp : setOps){
@@ -244,7 +251,7 @@ public class AnalyticsGen {
         public void visit(WithItem _wi) {
             throw new UnsupportedOperationException("With is Not supported yet.");
         }
-        
+        */
     }
     
 }
