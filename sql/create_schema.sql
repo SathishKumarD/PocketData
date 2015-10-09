@@ -47,7 +47,7 @@ PRIMARY KEY	 (sql_log_id)
 
 CREATE TABLE IF NOT EXISTS analytics(
 analytics_id                    INT NOT NULL,       	-- log_id is the same for sql_log and Analytics
-ticks 				INT,	
+ticks 				BIGINT,                 -- ticks are almost 1.4 trillion so INT cant handle
 ticks_ms 			DOUBLE,
 date_time			DATETIME,	
 time_taken                      INT,                    -- Time taken to execute the query
