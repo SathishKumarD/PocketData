@@ -71,7 +71,8 @@ public class PersistanceFileService extends PersistanceService{
     public void write(AbstractEntity _entity) throws Exception{
         StringBuilder line = new StringBuilder();
         for(int i = 0; i < fieldsToPersist.length; i++){
-            String cellValue = fieldsToPersist[i].get(_entity).toString();
+            Object cellValueObj = fieldsToPersist[i].get(_entity);
+            String cellValue = (cellValueObj != null) ? cellValueObj.toString() : ""; //This is required as some values can be null
             line.append(cellValue);
             if(i != fieldsToPersist.length - 1){
                 line.append(this.valueSeperator);
