@@ -71,6 +71,12 @@ join_width			INT,
 where_count                     INT,
 project_col_count               INT,
 project_star_count              SMALLINT,               -- -1 -> No * in the Project; 0 -> SELECT * FROM.. (All Columns); 1 -> SELLECT A.*, B.NAME, ...; 2 -> A.*, B.*, C.NAME, ...              
+noOfRelations                   SMALLINT,
+leftOuterJoin_count             SMALLINT,
+rightOuterJoint_count           SMALLINT,
+innerJoin_count                 SMALLINT,
+simpleJoin_count                SMALLINT,
+crossJoin_counnaturalJoin_count SMALLINT,
 PRIMARY KEY	 (analytics_id)
 );
 
