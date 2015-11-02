@@ -8,6 +8,10 @@ package edu.ub.tbd.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -84,6 +88,16 @@ public class ParserUtil {
         return out;
     }
     
-    
+    public static List<Expression> getAndClauses(Expression e) {
+        List<Expression> out = new ArrayList<Expression>();
+        if (e instanceof AndExpression) {
+            AndExpression a = (AndExpression) e;
+            out.addAll(getAndClauses(a.getLeftExpression()));
+            out.addAll(getAndClauses(a.getRightExpression()));
+        } else {
+            out.add(e);
+        }
+        return out;
+    }
     
 }

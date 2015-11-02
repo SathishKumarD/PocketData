@@ -50,9 +50,31 @@ public class Analytics extends AbstractEntity implements Comparable<Analytics>{
     @Column public int simpleJoin_count;
     @Column public int crossJoin_count;
     @Column public int naturalJoin_count;
+    @Column public int selectItems_count;
+    //Aggregate Functions.
+    @Column public int maxCount;
+    @Column public int minCount;
+    @Column public int sumCount;
+    @Column public int count;
+    @Column public int avgCount;
+    @Column public int groupConcatCount;
+    @Column public int lengthCount;
+    @Column public int substrCount;
+    @Column public int castCount;
+    @Column public int upperCount;
+    @Column public int lowerCount;
+    @Column public int coalesceCount;
+    @Column public int phoneNoEqualCount;
+    @Column public int ifNullCount;
+    @Column public int julianDayCount;
+    @Column public int dateCount;
+    @Column public int strfTimeCount;
+    
+    @Column public int totalWhereClauses;
     
     
-    /**
+
+	/**
      * Not upto date with instance variables
      * @deprecated 
      * @param _ticks
@@ -403,5 +425,158 @@ public class Analytics extends AbstractEntity implements Comparable<Analytics>{
 	public void setNaturalJoin_count(int naturalJoin_count) {
 		this.naturalJoin_count = naturalJoin_count;
 	}
+	
+    public int getSelectItems_count() {
+		return selectItems_count;
+	}
 
+	public void setSelectItems_count(int selectItems_count) {
+		this.selectItems_count = selectItems_count;
+	}
+	
+	public int getMaxCount() {
+		return maxCount;
+	}
+
+	public void setMaxCount(int maxCount) {
+		this.maxCount = maxCount;
+	}
+
+	public int getMinCount() {
+		return minCount;
+	}
+
+	public void setMinCount(int minCount) {
+		this.minCount = minCount;
+	}
+
+	public int getSumCount() {
+		return sumCount;
+	}
+
+	public void setSumCount(int sumCount) {
+		this.sumCount = sumCount;
+	}
+
+	public int getCount() {
+		return count;
+	}
+
+	public void setCount(int count) {
+		this.count = count;
+	}
+
+	public int getAvgCount() {
+		return avgCount;
+	}
+
+	public void setAvgCount(int avgCount) {
+		this.avgCount = avgCount;
+	}
+
+	public int getGroupConcatCount() {
+		return groupConcatCount;
+	}
+
+	public void setGroupConcatCount(int groupConcatCount) {
+		this.groupConcatCount = groupConcatCount;
+	}
+
+	public int getLengthCount() {
+		return lengthCount;
+	}
+
+	public void setLengthCount(int lengthCount) {
+		this.lengthCount = lengthCount;
+	}
+
+	public int getSubstrCount() {
+		return substrCount;
+	}
+
+	public void setSubstrCount(int substrCount) {
+		this.substrCount = substrCount;
+	}
+
+	public int getCastCount() {
+		return castCount;
+	}
+
+	public void setCastCount(int castCount) {
+		this.castCount = castCount;
+	}
+
+	public int getUpperCount() {
+		return upperCount;
+	}
+
+	public void setUpperCount(int upperCount) {
+		this.upperCount = upperCount;
+	}
+
+	public int getLowerCount() {
+		return lowerCount;
+	}
+
+	public void setLowerCount(int lowerCount) {
+		this.lowerCount = lowerCount;
+	}
+
+	public int getCoalesceCount() {
+		return coalesceCount;
+	}
+
+	public void setCoalesceCount(int coalesceCount) {
+		this.coalesceCount = coalesceCount;
+	}
+
+	public int getPhoneNoEqualCount() {
+		return phoneNoEqualCount;
+	}
+
+	public void setPhoneNoEqualCount(int phoneNoEqualCount) {
+		this.phoneNoEqualCount = phoneNoEqualCount;
+	}
+
+	public int getIfNullCount() {
+		return ifNullCount;
+	}
+
+	public void setIfNullCount(int ifNullCount) {
+		this.ifNullCount = ifNullCount;
+	}
+
+	public int getJulianDayCount() {
+		return julianDayCount;
+	}
+
+	public void setJulianDayCount(int julianDayCount) {
+		this.julianDayCount = julianDayCount;
+	}
+
+	public int getDateCount() {
+		return dateCount;
+	}
+
+	public void setDateCount(int dateCount) {
+		this.dateCount = dateCount;
+	}
+
+	public int getStrfTimeCount() {
+		return strfTimeCount;
+	}
+
+	public void setStrfTimeCount(int strfTimeCount) {
+		this.strfTimeCount = strfTimeCount;
+	}
+
+	public int getTotalWhereClauses() {
+		return totalWhereClauses;
+	}
+
+	public void setTotalWhereClauses(int totalWhereClauses) {
+		this.totalWhereClauses = totalWhereClauses;
+	}
+	
+	
 }

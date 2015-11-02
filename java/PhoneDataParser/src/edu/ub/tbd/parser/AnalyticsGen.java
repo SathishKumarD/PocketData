@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
@@ -40,6 +41,8 @@ import net.sf.jsqlparser.statement.select.Union;
 import net.sf.jsqlparser.statement.update.Update;
 
 import org.json.simple.JSONObject;
+
+import com.sun.javafx.fxml.expression.BinaryExpression;
 
 /**
  *
@@ -210,6 +213,97 @@ public class AnalyticsGen {
             }
             
         	parent_analytics.setNoOfRelations(noOfTables);
+        	
+        	int selectItemsCount = _ps.getSelectItems().size();
+        	parent_analytics.setSelectItems_count(selectItemsCount);
+        	
+        	int avgCount = 0;
+        	int maxCount = 0;
+        	int minCount = 0;
+        	int sumCount = 0;
+        	int count = 0;
+        	int groupConcat = 0;
+        	int lengthCount = 0;
+        	int substrCount = 0;
+        	int castCount = 0;
+        	int upperCount = 0;
+        	int lowerCount = 0;
+        	int coalesceCount = 0;
+        	int phoneNoEqualCount = 0;
+        	int strfTimeCount = 0;
+        	int ifNullCount = 0;
+        	int julianDayCount = 0;
+        	int dateCount = 0;
+        	for(SelectItem item : _ps.getSelectItems()) {
+        		if(item instanceof SelectExpressionItem) {
+        			SelectExpressionItem eachItem = (SelectExpressionItem) item;
+        			String exprString = eachItem.getExpression().toString().toUpperCase();
+        			
+        			if(exprString.contains("(")) {
+        				// The above check is added for the false negatives. Some of the selection is like AVGCOUNT, MAXSUM etc
+            			if(exprString.startsWith("AVG")){
+            				avgCount++;
+            			} else if(exprString.startsWith("MAX")) {
+            				maxCount++;
+            			} else if(exprString.startsWith("MIN")) {
+            				minCount++;
+            			} else if(exprString.startsWith("SUM")) {
+            				sumCount++;
+            			} else if(exprString.startsWith("COUNT")) {
+            				count++;
+            			} else if(exprString.startsWith("GROUP_CONCAT")) {
+            				groupConcat++;
+            			} else if(exprString.startsWith("LENGTH")) {
+            				lengthCount++;
+            			} else if(exprString.startsWith("SUBSTR")) {
+            				substrCount++;
+            			} else if(exprString.startsWith("CAST")) {
+            				castCount++;
+            			} else if(exprString.startsWith("UPPER")) {
+            				upperCount++;
+            			}  else if(exprString.startsWith("LOWER")) {
+            				lowerCount++;
+            			} else if(exprString.startsWith("COALESCE")) {
+            				coalesceCount++;
+            			} else if(exprString.startsWith("PHONE_NUMBERS_EQUAL")) {
+            				phoneNoEqualCount++;
+            			} else if(exprString.startsWith("STRFTIME")) {
+            				strfTimeCount++;
+            			} else if(exprString.startsWith("IFNULL")) {
+            				ifNullCount++;
+            			} else if(exprString.startsWith("JULIANDAY")) {
+            				julianDayCount++;
+            			} else if(exprString.startsWith("DATE")) {
+            				dateCount++;
+            			}
+        			}
+        		}
+        	}
+        	
+        	parent_analytics.setAvgCount(avgCount);
+        	parent_analytics.setMaxCount(maxCount);
+        	parent_analytics.setMinCount(minCount);
+        	parent_analytics.setCount(count);
+        	parent_analytics.setSumCount(sumCount);
+        	parent_analytics.setGroupConcatCount(groupConcat);
+        	parent_analytics.setLengthCount(lengthCount);
+        	parent_analytics.setSubstrCount(substrCount);
+        	parent_analytics.setCastCount(castCount);
+        	parent_analytics.setUpperCount(upperCount);
+        	parent_analytics.setLowerCount(lowerCount);
+        	parent_analytics.setCoalesceCount(coalesceCount);
+        	parent_analytics.setPhoneNoEqualCount(phoneNoEqualCount);
+        	parent_analytics.setStrfTimeCount(strfTimeCount);
+        	parent_analytics.setIfNullCount(ifNullCount);
+        	parent_analytics.setJulianDayCount(julianDayCount);
+        	parent_analytics.setDateCount(dateCount);
+        	
+        	int totalWhereClauses = 0;
+        	if(_ps.getWhere() != null) {
+        		totalWhereClauses =  ParserUtil.getAndClauses(_ps.getWhere()).size();
+        	}
+        	
+        	parent_analytics.setTotalWhereClauses(totalWhereClauses);
         }
 
         @Override
