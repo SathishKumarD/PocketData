@@ -22,4 +22,5 @@ public class AppConstants {
     public final static String OUTPUT_FILE_LINE_SEPERATOR = "\n";
     public final static boolean OUTPUT_FILE_WRITE_HEADER = true;
     
+    public final static boolean CUMULATE_ANALYTICS_TO_PARENT = true;
 }

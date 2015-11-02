@@ -73,6 +73,7 @@ public class Analytics extends AbstractEntity implements Comparable<Analytics>{
     @Column public int totalWhereClauses;
     
     public String parent_sql; //Probably this is the only field that is not persisted
+    @Column public String curr_sql;
 
 	/**
      * Not upto date with instance variables
@@ -585,6 +586,14 @@ public class Analytics extends AbstractEntity implements Comparable<Analytics>{
     public void setParent_sql(String _parent_sql) {
         this.parent_sql = _parent_sql;
     }
+
+    public String getCurr_sql() {
+        return curr_sql;
+    }
+
+    public void setCurr_sql(String _curr_sql) {
+        this.curr_sql = _curr_sql;
+    }
 	
-	
+    
 }

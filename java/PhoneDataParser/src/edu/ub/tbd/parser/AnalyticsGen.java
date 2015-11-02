@@ -41,7 +41,7 @@ import net.sf.jsqlparser.statement.update.Update;
 
 import org.json.simple.JSONObject;
 
-import com.sun.javafx.fxml.expression.BinaryExpression;
+import edu.ub.tbd.constants.AppConstants;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.FromItemVisitor;
 import net.sf.jsqlparser.statement.select.SubJoin;
@@ -85,7 +85,7 @@ public class AnalyticsGen {
             if(stmt != null){
                 if(stmt instanceof Select){
                     Select select = (Select) stmt;
-                    SelectUnionParser su_parser = new SelectUnionParser(parent_analytics);
+                    SelectUnionParser su_parser = new SelectUnionParser(parent_analytics, null, parent_analytics.getParent_sql());
                     select.getSelectBody().accept(su_parser);
                 } else if (stmt instanceof Delete) {
                     //TODO: <Sankar> Implement this
@@ -139,42 +139,74 @@ public class AnalyticsGen {
     private Analytics initChildAnalyticsEntity(Analytics _parentAnalytics){
         Analytics out = new Analytics();
 
-        //out.setTicks(Long.parseLong(logLineBean.getTicks()));
-        //out.setTicks_ms(Double.parseDouble(logLineBean.getTicks_ms()));
-        //out.setDate_time(Long.parseLong(logLineBean.getTicks()));
-        //out.setTime_taken((Long) JSON_Obj.get("Time"));
         //out.setArguments((String) JSON_Obj.get("Arguments")); //TODO: <Sankar> Maybe this needs to be fixed
-        //out.setCounter(((Number) JSON_Obj.get("Counter")).intValue());
-        
-        /*
-        Number jsonRowsReturnedValue = (Number) JSON_Obj.get("Rows returned"); // The JSON need not have rows returned for all log lines. Ex: DELETE
-        out.setRows_returned((jsonRowsReturnedValue != null) ? 
-                jsonRowsReturnedValue.intValue() : 0);
-        */
-        
         out.setUser_id(_parentAnalytics.getUser_id());
         out.setApp_id(_parentAnalytics.getApp_id());
         out.setSql_log_id(_parentAnalytics.getSql_log_id());
         out.setParent_analytics_id(_parentAnalytics.getAnalytics_id());
         out.setSql_height(_parentAnalytics.getSql_height() + 1);
-        //out.setQuery_type((String) JSON_Obj.get("Action"));
             
         return out;
     }
     
-    public static String getLogEntryRow(String query)
-    {
-       return null; 
+    public void cumulateAnalyticsFromChildToParent(Analytics _child, Analytics _parent){
+        if(AppConstants.CUMULATE_ANALYTICS_TO_PARENT && _parent != null){
+            _parent.setOuterjoin_count(_parent.getOuterjoin_count() + _child.getOuterjoin_count());
+            _parent.setDistinct_count(_parent.getDistinct_count() + _child.getDistinct_count());
+            _parent.setLimit_count(_parent.getLimit_count() + _child.getLimit_count());
+            _parent.setOrderby_count(_parent.getOrderby_count() + _child.getOrderby_count());
+            _parent.setAggregate_count(_parent.getAggregate_count() + _child.getAggregate_count());
+            _parent.setGroupby_count(_parent.getGroupby_count() + _child.getGroupby_count());
+            _parent.setUnion_count(_parent.getUnion_count() + _child.getUnion_count());
+            _parent.setJoin_width(_parent.getJoin_width() + _child.getJoin_width());
+            _parent.setWhere_count(_parent.getWhere_count() + _child.getWhere_count());
+            _parent.setProject_col_count(_parent.getProject_col_count() + _child.getProject_col_count());
+            _parent.setNoOfRelations(_parent.getNoOfRelations() + _child.getNoOfRelations());
+            _parent.setLeftOuterJoin_count(_parent.getLeftOuterJoin_count() + _child.getLeftOuterJoin_count());
+            _parent.setRightOuterJoint_count(_parent.getRightOuterJoint_count() + _child.getRightOuterJoint_count());
+            _parent.setInnerJoin_count(_parent.getInnerJoin_count() + _child.getInnerJoin_count());
+            _parent.setSimpleJoin_count(_parent.getSimpleJoin_count() + _child.getSimpleJoin_count());
+            _parent.setCrossJoin_count(_parent.getCrossJoin_count() + _child.getCrossJoin_count());
+            _parent.setNaturalJoin_count(_parent.getNaturalJoin_count() + _child.getNaturalJoin_count());
+            _parent.setSelectItems_count(_parent.getSelectItems_count() + _child.getSelectItems_count());
+            _parent.setMaxCount(_parent.getMaxCount() + _child.getMaxCount());
+            _parent.setMinCount(_parent.getMinCount() + _child.getMinCount());
+            _parent.setSumCount(_parent.getSumCount() + _child.getSumCount());
+            _parent.setCount(_parent.getCount() + _child.getCount());
+            _parent.setAvgCount(_parent.getAvgCount() + _child.getAvgCount());
+            _parent.setGroupConcatCount(_parent.getGroupConcatCount() + _child.getGroupConcatCount());
+            _parent.setLengthCount(_parent.getLengthCount() + _child.getLengthCount());
+            _parent.setSubstrCount(_parent.getSubstrCount() + _child.getSubstrCount());
+            _parent.setCastCount(_parent.getCastCount() + _child.getCastCount());
+            _parent.setUpperCount(_parent.getUpperCount() + _child.getUpperCount());
+            _parent.setLowerCount(_parent.getLowerCount() + _child.getLowerCount());
+            _parent.setCoalesceCount(_parent.getCoalesceCount() + _child.getCoalesceCount());
+            _parent.setPhoneNoEqualCount(_parent.getPhoneNoEqualCount() + _child.getPhoneNoEqualCount());
+            _parent.setIfNullCount(_parent.getIfNullCount() + _child.getIfNullCount());
+            _parent.setJulianDayCount(_parent.getJulianDayCount() + _child.getJulianDayCount());
+            _parent.setDateCount(_parent.getDateCount() + _child.getDateCount());
+            _parent.setStrfTimeCount(_parent.getStrfTimeCount() + _child.getStrfTimeCount());
+            _parent.setTotalWhereClauses(_parent.getTotalWhereClauses() + _child.getTotalWhereClauses());
+        }
     }
     
     class SelectUnionParser implements SelectVisitor, SelectItemVisitor, FromItemVisitor{
 
-        private final Analytics currAnalyticsEntity;
+        private final Analytics currAnalytics;
+        private final Analytics parentAnalytics;
         
-        int numberOfUnion = 0;
-        
-        public SelectUnionParser(Analytics _currAnalyticsEntity){
-            this.currAnalyticsEntity = _currAnalyticsEntity;
+        public SelectUnionParser(Analytics _currAnalytics, Analytics _parentAnalytics, String _curr_sql){
+            this.currAnalytics = _currAnalytics;
+            this.parentAnalytics = _parentAnalytics;
+            this.currAnalytics.setCurr_sql(_curr_sql);
+        }
+
+        public Analytics getCurrAnalytics() {
+            return currAnalytics;
+        }
+
+        public Analytics getParentAnalytics() {
+            return parentAnalytics;
         }
         
         private Analytics setUpChildAnalyticsEntity(Analytics _parentAnalytics){
@@ -185,189 +217,66 @@ public class AnalyticsGen {
         
         @Override
         public void visit(PlainSelect _ps) {
+            //Parse From statements
+            FromItem fromItem = _ps.getFromItem();
+            fromItem.accept(this);
+            
+            //Parse whereclauses
+            int totalWhereClauses = 0;
+            if(_ps.getWhere() != null) {
+                totalWhereClauses =  ParserUtil.getAndClauses(_ps.getWhere()).size();
+            }
+            currAnalytics.setTotalWhereClauses(currAnalytics.getTotalWhereClauses() + totalWhereClauses);
+            
+            //Parse Projections
             List<SelectItem> selectItems = _ps.getSelectItems();
             for(SelectItem selectItem : selectItems){
                 selectItem.accept(this);
             }
-            
-            int joinWidth = 0;
-            if(_ps.getJoins() != null) {
-            	joinWidth = _ps.getJoins().size();
-            }
-            currAnalyticsEntity.setJoin_width(joinWidth);
-            
-            int noOfTables = 1;
-            if(joinWidth > 0) {
-            	HashSet<String> set = new HashSet<>();
-            	int crossProduct = 0;
-            	int innerJoin = 0;
-            	int leftOuterJoin = 0;
-            	int naturalJoin = 0;
-            	int outerJoin = 0;
-            	int rightOuterJoin = 0;
-            	int simpleJoin = 0;
-                
-            	for(Join join : _ps.getJoins()) {
-            		set.add(_ps.getFromItem().toString());
-            		set.add(join.getRightItem().toString());
-            		
-            		if(join.isLeft()) {
-        				leftOuterJoin++;
-        			} else if(join.isRight()) {
-        				rightOuterJoin++;
-        			} else if(join.isOuter() || join.isFull()){
-        				outerJoin++;
-        			} else if(join.isSimple()) {
-            			simpleJoin++;
-            		} else if(join.isNatural()) {
-            			naturalJoin++;
-            		} /*else if(join.isCross()) {
-            			crossProduct++;
-            		}*/ else {
-            			// CASE: R1 JOIN R2 ON (R1.C1 = R2.C2)
-            			innerJoin++;
-            		} 
-            	}
-            	noOfTables = set.size();
-            	
-            	currAnalyticsEntity.setOuterjoin_count(outerJoin);
-            	currAnalyticsEntity.setLeftOuterJoin_count(leftOuterJoin);
-            	currAnalyticsEntity.setRightOuterJoint_count(rightOuterJoin);
-            	currAnalyticsEntity.setSimpleJoin_count(simpleJoin);
-            	currAnalyticsEntity.setNaturalJoin_count(naturalJoin);
-            	currAnalyticsEntity.setCrossJoin_count(crossProduct);
-            	currAnalyticsEntity.setInnerJoin_count(innerJoin);
-            }
-            
-        	currAnalyticsEntity.setNoOfRelations(noOfTables);
-        	
-        	int selectItemsCount = _ps.getSelectItems().size();
-        	currAnalyticsEntity.setSelectItems_count(selectItemsCount);
-        	
-        	int avgCount = 0;
-        	int maxCount = 0;
-        	int minCount = 0;
-        	int sumCount = 0;
-        	int count = 0;
-        	int groupConcat = 0;
-        	int lengthCount = 0;
-        	int substrCount = 0;
-        	int castCount = 0;
-        	int upperCount = 0;
-        	int lowerCount = 0;
-        	int coalesceCount = 0;
-        	int phoneNoEqualCount = 0;
-        	int strfTimeCount = 0;
-        	int ifNullCount = 0;
-        	int julianDayCount = 0;
-        	int dateCount = 0;
-        	for(SelectItem item : _ps.getSelectItems()) {
-        		if(item instanceof SelectExpressionItem) {
-        			SelectExpressionItem eachItem = (SelectExpressionItem) item;
-        			String exprString = eachItem.getExpression().toString().toUpperCase();
-        			
-        			if(exprString.contains("(")) {
-        				// The above check is added for the false negatives. Some of the selection is like AVGCOUNT, MAXSUM etc
-            			if(exprString.startsWith("AVG")){
-            				avgCount++;
-            			} else if(exprString.startsWith("MAX")) {
-            				maxCount++;
-            			} else if(exprString.startsWith("MIN")) {
-            				minCount++;
-            			} else if(exprString.startsWith("SUM")) {
-            				sumCount++;
-            			} else if(exprString.startsWith("COUNT")) {
-            				count++;
-            			} else if(exprString.startsWith("GROUP_CONCAT")) {
-            				groupConcat++;
-            			} else if(exprString.startsWith("LENGTH")) {
-            				lengthCount++;
-            			} else if(exprString.startsWith("SUBSTR")) {
-            				substrCount++;
-            			} else if(exprString.startsWith("CAST")) {
-            				castCount++;
-            			} else if(exprString.startsWith("UPPER")) {
-            				upperCount++;
-            			}  else if(exprString.startsWith("LOWER")) {
-            				lowerCount++;
-            			} else if(exprString.startsWith("COALESCE")) {
-            				coalesceCount++;
-            			} else if(exprString.startsWith("PHONE_NUMBERS_EQUAL")) {
-            				phoneNoEqualCount++;
-            			} else if(exprString.startsWith("STRFTIME")) {
-            				strfTimeCount++;
-            			} else if(exprString.startsWith("IFNULL")) {
-            				ifNullCount++;
-            			} else if(exprString.startsWith("JULIANDAY")) {
-            				julianDayCount++;
-            			} else if(exprString.startsWith("DATE")) {
-            				dateCount++;
-            			}
-        			}
-        		}
-        	}
-        	
-        	currAnalyticsEntity.setAvgCount(avgCount);
-        	currAnalyticsEntity.setMaxCount(maxCount);
-        	currAnalyticsEntity.setMinCount(minCount);
-        	currAnalyticsEntity.setCount(count);
-        	currAnalyticsEntity.setSumCount(sumCount);
-        	currAnalyticsEntity.setGroupConcatCount(groupConcat);
-        	currAnalyticsEntity.setLengthCount(lengthCount);
-        	currAnalyticsEntity.setSubstrCount(substrCount);
-        	currAnalyticsEntity.setCastCount(castCount);
-        	currAnalyticsEntity.setUpperCount(upperCount);
-        	currAnalyticsEntity.setLowerCount(lowerCount);
-        	currAnalyticsEntity.setCoalesceCount(coalesceCount);
-        	currAnalyticsEntity.setPhoneNoEqualCount(phoneNoEqualCount);
-        	currAnalyticsEntity.setStrfTimeCount(strfTimeCount);
-        	currAnalyticsEntity.setIfNullCount(ifNullCount);
-        	currAnalyticsEntity.setJulianDayCount(julianDayCount);
-        	currAnalyticsEntity.setDateCount(dateCount);
-        	
-        	int totalWhereClauses = 0;
-        	if(_ps.getWhere() != null) {
-        		totalWhereClauses =  ParserUtil.getAndClauses(_ps.getWhere()).size();
-        	}
-        	
-        	currAnalyticsEntity.setTotalWhereClauses(totalWhereClauses);
         }
 
         @Override
         public void visit(AllColumns _ac) {
-            currAnalyticsEntity.setProject_star_count(0);
+            currAnalytics.setProject_star_count(0);
         }
 
         @Override
         public void visit(AllTableColumns _atc) {
             {
-                int project_star_count = currAnalyticsEntity.getProject_star_count();
+                int project_star_count = currAnalytics.getProject_star_count();
                 project_star_count = (project_star_count == -1) ? 1 : (project_star_count + 1);
-                currAnalyticsEntity.setProject_star_count(project_star_count);
+                currAnalytics.setProject_star_count(project_star_count);
+            }
+        }
+
+        @Override
+        public void visit(SelectExpressionItem _sei) {
+            currAnalytics.setProject_col_count(currAnalytics.getProject_col_count()+1);
+        }
+
+        @Override
+        public void visit(Union _union) {
+            List<PlainSelect> plainSelects = _union.getPlainSelects();
+            currAnalytics.setUnion_count(plainSelects.size());
+            for(PlainSelect ps : plainSelects){
+                SelectUnionParser child_su_parser = new SelectUnionParser(setUpChildAnalyticsEntity(currAnalytics), currAnalytics, ps.toString());
+                ps.accept(child_su_parser);
+                cumulateAnalyticsFromChildToParent(child_su_parser.getCurrAnalytics(), child_su_parser.getParentAnalytics());
             }
             
         }
 
         @Override
-        public void visit(SelectExpressionItem _sei) {
-            currAnalyticsEntity.setProject_col_count(currAnalyticsEntity.getProject_col_count()+1);
-        }
-
-        @Override
-        public void visit(Union _union) {
-            numberOfUnion++;
-            //throw new UnsupportedOperationException("Not supported yet."); //TODO - Fix me 
-        }
-
-        @Override
         public void visit(Table _table) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            currAnalytics.setNoOfRelations(currAnalytics.getNoOfRelations() + 1);
         }
 
         @Override
         public void visit(SubSelect _ss) {
-            SelectUnionParser child_su_parser = new SelectUnionParser(setUpChildAnalyticsEntity(currAnalyticsEntity));
+            SelectUnionParser child_su_parser = new SelectUnionParser(setUpChildAnalyticsEntity(currAnalytics), 
+                    currAnalytics, _ss.toString());
             _ss.getSelectBody().accept(child_su_parser);
+            cumulateAnalyticsFromChildToParent(child_su_parser.getCurrAnalytics(), child_su_parser.getParentAnalytics());
         }
 
         @Override

@@ -46,37 +46,58 @@ PRIMARY KEY	 (sql_log_id)
 );
 
 CREATE TABLE IF NOT EXISTS analytics(
-analytics_id                    INT NOT NULL,       	-- log_id is the same for sql_log and Analytics
-ticks 				BIGINT,                 -- ticks are almost 1.4 trillion so INT cant handle
-ticks_ms 			DOUBLE,
-date_time			DATETIME,	
-time_taken                      INT,                    -- Time taken to execute the query
-arguments                       VARCHAR(200),           -- Arguments for the query (if any)
-counter                         INT,                    -- Increment for same App query (from JSON)
-rows_returned                   INT,                    -- rows returned for the SQL
-user_id 			INT,			-- FK to user table
-app_id				INT,			-- FK to app table
-sql_log_id			INT,			-- FK to sql_log table
-parent_analytics_id             INT,			-- FK to analytics table
-sql_height                      INT,                    -- 0 for parent query, 1 for sub-query,...
-query_type 			VARCHAR(10),            -- SELECT, INSERT, UPDATE ETC.,
-outerjoin_count                 INT,
-distinct_count                  INT,
-limit_count			INT,
-orderby_count                   INT,
-aggregate_count                 INT,
-groupby_count                   INT,
-union_count			INT,
-join_width			INT,
-where_count                     INT,
-project_col_count               INT,
-project_star_count              SMALLINT,               -- -1 -> No * in the Project; 0 -> SELECT * FROM.. (All Columns); 1 -> SELLECT A.*, B.NAME, ...; 2 -> A.*, B.*, C.NAME, ...              
-noOfRelations                   SMALLINT,
-leftOuterJoin_count             SMALLINT,
-rightOuterJoint_count           SMALLINT,
-innerJoin_count                 SMALLINT,
-simpleJoin_count                SMALLINT,
-crossJoin_counnaturalJoin_count SMALLINT,
+analytics_id            INT NOT NULL,   -- log_id is the same for sql_log and Analytics
+ticks                   BIGINT,         -- ticks are almost 1.4 trillion so INT cant handle
+ticks_ms                DOUBLE,
+date_time               DATETIME,
+time_taken              INT,            -- Time taken to execute the query
+arguments               VARCHAR(200),   -- Arguments for the query (if any)
+counter                 INT,            -- Increment for same App query (from JSON)
+rows_returned           INT,            -- rows returned for the SQL
+user_id                 SMALLINT,       -- FK to user table
+app_id                  TINYINT,        -- FK to app table
+sql_log_id              INT,            -- FK to sql_log table
+parent_analytics_id     INT,            -- FK to analytics table
+sql_height              TINYINT,        -- 0 for parent query, 1 for sub-query,...
+query_type              VARCHAR(10),    -- SELECT, INSERT, UPDATE ETC.,
+outerjoin_count         SMALLINT,
+distinct_count          SMALLINT,
+limit_count             SMALLINT,
+orderby_count           SMALLINT,
+aggregate_count         SMALLINT,
+groupby_count           SMALLINT,
+union_count             SMALLINT,
+join_width              SMALLINT,
+where_count             SMALLINT,
+project_col_count       SMALLINT,
+project_star_count      SMALLINT,       -- Never Cumulative summed ==> -1 -> No * in the Project; 0 -> SELECT * FROM.. (All Columns); 1 -> SELLECT A.*, B.NAME, ...; 2 -> A.*, B.*, C.NAME, ...
+noOfRelations           SMALLINT,
+leftOuterJoin_count     SMALLINT,
+rightOuterJoint_count   SMALLINT,
+innerJoin_count         SMALLINT,
+simpleJoin_count        SMALLINT,
+crossJoin_count         SMALLINT,
+naturalJoin_count       SMALLINT,
+selectItems_count       SMALLINT,
+maxCount                SMALLINT,
+minCount                SMALLINT,
+sumCount                SMALLINT,
+count                   SMALLINT,
+avgCount                SMALLINT,
+groupConcatCount        SMALLINT,
+lengthCount             SMALLINT,
+substrCount             SMALLINT,
+castCount               SMALLINT,
+upperCount              SMALLINT,
+lowerCount              SMALLINT,
+coalesceCount           SMALLINT,
+phoneNoEqualCount       SMALLINT,
+ifNullCount             SMALLINT,
+julianDayCount          SMALLINT,
+dateCount               SMALLINT,
+strfTimeCount           SMALLINT,
+totalWhereClauses       SMALLINT,
+curr_sql                VARCHAR(500),
 PRIMARY KEY	 (analytics_id)
 );
 
