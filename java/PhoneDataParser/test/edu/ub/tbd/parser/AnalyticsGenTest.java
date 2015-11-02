@@ -5,10 +5,16 @@
  */
 package edu.ub.tbd.parser;
 
+import java.util.ArrayList;
+
 import edu.ub.tbd.beans.LogLineBean;
+import edu.ub.tbd.entity.Analytics;
 import edu.ub.tbd.entity.Sql_log;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -25,9 +31,10 @@ public class AnalyticsGenTest {
         String sql = "SELECT thread_id FROM (SELECT _id, thread_id FROM pdu WHERE (msg_box=3) UNION SELECT _id, thread_id FROM sms WHERE (type=3))";
         LogLineBean _logLineBean = getDummyLogLineBean(sql);
         Sql_log sqlLogBean = getSql_logBean();
-        
-        
-        
+        JSONObject dummyJsonObjectBean = getDummyJsonObjectBean(_logLineBean);
+        AnalyticsGen analyticsGen = new AnalyticsGen(dummyJsonObjectBean, sqlLogBean, _logLineBean);
+        ArrayList<Analytics> analyticsList = analyticsGen.generate();
+        System.out.println(analyticsGen);
         
     }
     
@@ -44,5 +51,15 @@ public class AnalyticsGenTest {
     
     private Sql_log getSql_logBean(){
         return new Sql_log(1,120,"Dummy Data");
+    }
+    
+    private JSONObject getDummyJsonObjectBean(LogLineBean bean) {
+    	try {
+    		JSONParser parser = new JSONParser();
+			return (JSONObject) parser.parse(bean.getLog_msg());
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+    	return null;
     }
 }
