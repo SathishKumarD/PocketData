@@ -319,7 +319,6 @@ public class LogParser {
         ps_SqlLog.close();
         ps_Analytics.close();
         ps_UnParsedSQLs.close();
-        System.out.println("PRAGMA COUNT = " + AnalyticsGen.PRAGMA_COUNT);
     }
     
     /*

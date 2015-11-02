@@ -8,6 +8,8 @@ package edu.ub.tbd.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -19,6 +21,21 @@ import org.apache.commons.lang3.StringUtils;
  * @author san
  */
 public class ParserUtil {
+    
+    /*
+     * We are only accounting for upper case PRAGMA for performance efficiency.
+     * Though SQL is case insensitive. Checked the current log and only 36 SQLs are in lower case pragma.
+     * For now they will not be parsed and pushed to unparsedsqls.
+     * Case-sensitive: PRAGMA ==> 6562115 (parsed) + 2266 (unparsed) | pragma ==> 36 + 0 (unparsed)
+     * Case-insensitive: pragma ==> 6562151
+     * Conclusion: Hence no weird mixing of cases withing same SQL
+     */
+    //TODO: <Sankar> fix PRAGMA later if data changes
+    public final static Pattern PATTERN_PRAGMA = Pattern.compile("^PRAGMA");
+    
+    public static boolean isPRAGMA_Query(final String sql){
+        return PATTERN_PRAGMA.matcher(sql).find();
+    }
     
     public static StringBuilder convertToCSV(String... stringVals){
         if(stringVals == null || stringVals.length == 0){

@@ -42,7 +42,7 @@ public class Analytics extends AbstractEntity implements Comparable<Analytics>{
     @Column public int join_width;
     @Column public int where_count;
     @Column public int project_col_count;
-    @Column public int project_star_count; // -1 -> No * in the Project; 0 -> SELECT * FROM.. (All Columns); 1 -> SELLECT A.*, B.NAME, ...; 2 -> A.*, B.*, C.NAME, ...
+    @Column public int project_star_count = -1; // -1 -> No * in the Project; 0 -> SELECT * FROM.. (All Columns); 1 -> SELLECT A.*, B.NAME, ...; 2 -> A.*, B.*, C.NAME, ...
     @Column public int noOfRelations;
     @Column public int leftOuterJoin_count;
     @Column public int rightOuterJoint_count;
@@ -72,7 +72,7 @@ public class Analytics extends AbstractEntity implements Comparable<Analytics>{
     
     @Column public int totalWhereClauses;
     
-    
+    public String parent_sql; //Probably this is the only field that is not persisted
 
 	/**
      * Not upto date with instance variables
@@ -372,211 +372,219 @@ public class Analytics extends AbstractEntity implements Comparable<Analytics>{
     
     public int getNoOfRelations() {
 		return noOfRelations;
-	}
+    }
 
-	public void setNoOfRelations(int noOfRelations) {
-		this.noOfRelations = noOfRelations;
-	}
+    public void setNoOfRelations(int noOfRelations) {
+            this.noOfRelations = noOfRelations;
+    }
 
-	public int getLeftOuterJoin_count() {
-		return leftOuterJoin_count;
-	}
+    public int getLeftOuterJoin_count() {
+            return leftOuterJoin_count;
+    }
 
-	public void setLeftOuterJoin_count(int leftOuterJoin_count) {
-		this.leftOuterJoin_count = leftOuterJoin_count;
-	}
+    public void setLeftOuterJoin_count(int leftOuterJoin_count) {
+            this.leftOuterJoin_count = leftOuterJoin_count;
+    }
 
-	public int getRightOuterJoint_count() {
-		return rightOuterJoint_count;
-	}
+    public int getRightOuterJoint_count() {
+            return rightOuterJoint_count;
+    }
 
-	public void setRightOuterJoint_count(int rightOuterJoint_count) {
-		this.rightOuterJoint_count = rightOuterJoint_count;
-	}
+    public void setRightOuterJoint_count(int rightOuterJoint_count) {
+            this.rightOuterJoint_count = rightOuterJoint_count;
+    }
 
-	public int getInnerJoin_count() {
-		return innerJoin_count;
-	}
+    public int getInnerJoin_count() {
+            return innerJoin_count;
+    }
 
-	public void setInnerJoin_count(int innerJoin_count) {
-		this.innerJoin_count = innerJoin_count;
-	}
+    public void setInnerJoin_count(int innerJoin_count) {
+            this.innerJoin_count = innerJoin_count;
+    }
 
-	public int getSimpleJoin_count() {
-		return simpleJoin_count;
-	}
+    public int getSimpleJoin_count() {
+            return simpleJoin_count;
+    }
 
-	public void setSimpleJoin_count(int simpleJoin_count) {
-		this.simpleJoin_count = simpleJoin_count;
-	}
+    public void setSimpleJoin_count(int simpleJoin_count) {
+            this.simpleJoin_count = simpleJoin_count;
+    }
 
-	public int getCrossJoin_count() {
-		return crossJoin_count;
-	}
+    public int getCrossJoin_count() {
+            return crossJoin_count;
+    }
 
-	public void setCrossJoin_count(int crossJoin_count) {
-		this.crossJoin_count = crossJoin_count;
-	}
+    public void setCrossJoin_count(int crossJoin_count) {
+            this.crossJoin_count = crossJoin_count;
+    }
 
-	public int getNaturalJoin_count() {
-		return naturalJoin_count;
-	}
+    public int getNaturalJoin_count() {
+            return naturalJoin_count;
+    }
 
-	public void setNaturalJoin_count(int naturalJoin_count) {
-		this.naturalJoin_count = naturalJoin_count;
-	}
+    public void setNaturalJoin_count(int naturalJoin_count) {
+            this.naturalJoin_count = naturalJoin_count;
+    }
 	
     public int getSelectItems_count() {
-		return selectItems_count;
-	}
+        return selectItems_count;
+    }
 
-	public void setSelectItems_count(int selectItems_count) {
-		this.selectItems_count = selectItems_count;
-	}
-	
-	public int getMaxCount() {
-		return maxCount;
-	}
+    public void setSelectItems_count(int selectItems_count) {
+            this.selectItems_count = selectItems_count;
+    }
 
-	public void setMaxCount(int maxCount) {
-		this.maxCount = maxCount;
-	}
+    public int getMaxCount() {
+            return maxCount;
+    }
 
-	public int getMinCount() {
-		return minCount;
-	}
+    public void setMaxCount(int maxCount) {
+            this.maxCount = maxCount;
+    }
 
-	public void setMinCount(int minCount) {
-		this.minCount = minCount;
-	}
+    public int getMinCount() {
+            return minCount;
+    }
 
-	public int getSumCount() {
-		return sumCount;
-	}
+    public void setMinCount(int minCount) {
+            this.minCount = minCount;
+    }
 
-	public void setSumCount(int sumCount) {
-		this.sumCount = sumCount;
-	}
+    public int getSumCount() {
+            return sumCount;
+    }
 
-	public int getCount() {
-		return count;
-	}
+    public void setSumCount(int sumCount) {
+            this.sumCount = sumCount;
+    }
 
-	public void setCount(int count) {
-		this.count = count;
-	}
+    public int getCount() {
+            return count;
+    }
 
-	public int getAvgCount() {
-		return avgCount;
-	}
+    public void setCount(int count) {
+            this.count = count;
+    }
 
-	public void setAvgCount(int avgCount) {
-		this.avgCount = avgCount;
-	}
+    public int getAvgCount() {
+            return avgCount;
+    }
 
-	public int getGroupConcatCount() {
-		return groupConcatCount;
-	}
+    public void setAvgCount(int avgCount) {
+            this.avgCount = avgCount;
+    }
 
-	public void setGroupConcatCount(int groupConcatCount) {
-		this.groupConcatCount = groupConcatCount;
-	}
+    public int getGroupConcatCount() {
+            return groupConcatCount;
+    }
 
-	public int getLengthCount() {
-		return lengthCount;
-	}
+    public void setGroupConcatCount(int groupConcatCount) {
+            this.groupConcatCount = groupConcatCount;
+    }
 
-	public void setLengthCount(int lengthCount) {
-		this.lengthCount = lengthCount;
-	}
+    public int getLengthCount() {
+            return lengthCount;
+    }
 
-	public int getSubstrCount() {
-		return substrCount;
-	}
+    public void setLengthCount(int lengthCount) {
+            this.lengthCount = lengthCount;
+    }
 
-	public void setSubstrCount(int substrCount) {
-		this.substrCount = substrCount;
-	}
+    public int getSubstrCount() {
+            return substrCount;
+    }
 
-	public int getCastCount() {
-		return castCount;
-	}
+    public void setSubstrCount(int substrCount) {
+            this.substrCount = substrCount;
+    }
 
-	public void setCastCount(int castCount) {
-		this.castCount = castCount;
-	}
+    public int getCastCount() {
+            return castCount;
+    }
 
-	public int getUpperCount() {
-		return upperCount;
-	}
+    public void setCastCount(int castCount) {
+            this.castCount = castCount;
+    }
 
-	public void setUpperCount(int upperCount) {
-		this.upperCount = upperCount;
-	}
+    public int getUpperCount() {
+            return upperCount;
+    }
 
-	public int getLowerCount() {
-		return lowerCount;
-	}
+    public void setUpperCount(int upperCount) {
+            this.upperCount = upperCount;
+    }
 
-	public void setLowerCount(int lowerCount) {
-		this.lowerCount = lowerCount;
-	}
+    public int getLowerCount() {
+            return lowerCount;
+    }
 
-	public int getCoalesceCount() {
-		return coalesceCount;
-	}
+    public void setLowerCount(int lowerCount) {
+            this.lowerCount = lowerCount;
+    }
 
-	public void setCoalesceCount(int coalesceCount) {
-		this.coalesceCount = coalesceCount;
-	}
+    public int getCoalesceCount() {
+            return coalesceCount;
+    }
 
-	public int getPhoneNoEqualCount() {
-		return phoneNoEqualCount;
-	}
+    public void setCoalesceCount(int coalesceCount) {
+            this.coalesceCount = coalesceCount;
+    }
 
-	public void setPhoneNoEqualCount(int phoneNoEqualCount) {
-		this.phoneNoEqualCount = phoneNoEqualCount;
-	}
+    public int getPhoneNoEqualCount() {
+            return phoneNoEqualCount;
+    }
 
-	public int getIfNullCount() {
-		return ifNullCount;
-	}
+    public void setPhoneNoEqualCount(int phoneNoEqualCount) {
+            this.phoneNoEqualCount = phoneNoEqualCount;
+    }
 
-	public void setIfNullCount(int ifNullCount) {
-		this.ifNullCount = ifNullCount;
-	}
+    public int getIfNullCount() {
+            return ifNullCount;
+    }
 
-	public int getJulianDayCount() {
-		return julianDayCount;
-	}
+    public void setIfNullCount(int ifNullCount) {
+            this.ifNullCount = ifNullCount;
+    }
 
-	public void setJulianDayCount(int julianDayCount) {
-		this.julianDayCount = julianDayCount;
-	}
+    public int getJulianDayCount() {
+            return julianDayCount;
+    }
 
-	public int getDateCount() {
-		return dateCount;
-	}
+    public void setJulianDayCount(int julianDayCount) {
+            this.julianDayCount = julianDayCount;
+    }
 
-	public void setDateCount(int dateCount) {
-		this.dateCount = dateCount;
-	}
+    public int getDateCount() {
+            return dateCount;
+    }
 
-	public int getStrfTimeCount() {
-		return strfTimeCount;
-	}
+    public void setDateCount(int dateCount) {
+            this.dateCount = dateCount;
+    }
 
-	public void setStrfTimeCount(int strfTimeCount) {
-		this.strfTimeCount = strfTimeCount;
-	}
+    public int getStrfTimeCount() {
+            return strfTimeCount;
+    }
 
-	public int getTotalWhereClauses() {
-		return totalWhereClauses;
-	}
+    public void setStrfTimeCount(int strfTimeCount) {
+            this.strfTimeCount = strfTimeCount;
+    }
 
-	public void setTotalWhereClauses(int totalWhereClauses) {
-		this.totalWhereClauses = totalWhereClauses;
-	}
+    public int getTotalWhereClauses() {
+            return totalWhereClauses;
+    }
+
+    public void setTotalWhereClauses(int totalWhereClauses) {
+            this.totalWhereClauses = totalWhereClauses;
+    }
+
+    public String getParent_sql() {
+        return parent_sql;
+    }
+
+    public void setParent_sql(String _parent_sql) {
+        this.parent_sql = _parent_sql;
+    }
 	
 	
 }

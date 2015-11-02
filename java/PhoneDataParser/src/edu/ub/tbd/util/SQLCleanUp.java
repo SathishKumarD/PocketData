@@ -11,8 +11,7 @@ package edu.ub.tbd.util;
  */
 public class SQLCleanUp {
     
-    public static String cleanUpSQL(String _raw_SQL, String _arguments_HashCoded, 
-            String _arguments)
+    public static String cleanUpSQL(String _raw_SQL, String _arguments)
     {
         if(_raw_SQL != null && ! _raw_SQL.isEmpty()){
             
@@ -21,7 +20,7 @@ public class SQLCleanUp {
             String sql_Junk_Prefix_CleanedUp = cleanUpJunkPrefix(_raw_SQL);
             
             String sql_Arg_Param_CleanedUp = ParserUtil.applyArgumentsToSQLQuery(
-                    ((_arguments_HashCoded != null) ? _arguments_HashCoded : _arguments), sql_Junk_Prefix_CleanedUp);
+                    _arguments, sql_Junk_Prefix_CleanedUp);
             
             return sql_Arg_Param_CleanedUp;
         } else {
