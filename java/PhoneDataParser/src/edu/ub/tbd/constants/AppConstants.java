@@ -5,6 +5,8 @@
  */
 package edu.ub.tbd.constants;
 
+import java.io.File;
+
 /**
  *
  * @author san
@@ -12,6 +14,14 @@ package edu.ub.tbd.constants;
 public class AppConstants {
     public static String SRC_DIR = "/Users/san/UB/CSE-662/Project/DataSet/logcat";
     public static String DEST_FOLDER = "/Users/san/UB/CSE-662/Project/Run/OUTPUT";
+    public static final String OBJECTS_FOLDER = "OBJECTS";
+    public static String ABS_OBJECTS_FOLDER = DEST_FOLDER + File.separatorChar + OBJECTS_FOLDER;
+    public static final String DATA_FOLDER = "DATA";
+    public static String ABS_DATA_FOLDER = DEST_FOLDER + File.separatorChar + DATA_FOLDER;
+    
+    public static boolean MODE_OBJECT_GEN;
+    public static boolean MODE_ANALYTICS_GEN;
+    
     public final static String DEST_FILE = "insert_analytics_data.sql";
     
     public final static String SRC_LOG_FILE_EXT = ".gz";
@@ -23,4 +33,9 @@ public class AppConstants {
     public final static boolean OUTPUT_FILE_WRITE_HEADER = true;
     
     public final static boolean CUMULATE_ANALYTICS_TO_PARENT = true;
+    
+    public final static int TOTAL_NUM_OF_USERS_IN_LOG = 11;
+    
+    //Serialization constants
+    public final static int OBJ_FILE_BUFFER_SIZE = 3000;
 }

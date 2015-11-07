@@ -5,27 +5,24 @@
  */
 package edu.ub.tbd.entity;
 
+import edu.ub.tbd.beans.LogData;
+
 /**
  *
  * @author san
  */
 public class Sql_log extends AbstractEntity{
-    private static int curr_PK_ID = 0;
-    
-    public static int getCurrPKID(){
-        return curr_PK_ID;
-    }
     
     @Column public int sql_log_id;
     @Column public int user_id;
     @Column public int app_id;
-    @Column public String raw_data;
+    @Column public String clean_sql;
 
-    public Sql_log(int _user_id, int _app_id, String _raw_data) {
-        this.sql_log_id = ++curr_PK_ID;
-        this.user_id = _user_id;
-        this.app_id = _app_id;
-        this.raw_data = _raw_data;
+    public Sql_log(LogData _ld){
+        this.sql_log_id = _ld.getSql_log_id();
+        this.user_id = _ld.getUser_id();
+        this.app_id = _ld.getApp_id();
+        this.clean_sql = _ld.getSql();
     }
 
     /***************************************************************************
@@ -59,12 +56,12 @@ public class Sql_log extends AbstractEntity{
         this.app_id = _app_id;
     }
 
-    public String getRaw_data() {
-        return raw_data;
+    public String getClean_sql() {
+        return clean_sql;
     }
 
-    public void setRaw_data(String _raw_data) {
-        this.raw_data = _raw_data;
+    public void setClean_sql(String _clean_sql) {
+        this.clean_sql = _clean_sql;
     }
 
 }

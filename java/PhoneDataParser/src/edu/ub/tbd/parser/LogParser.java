@@ -5,26 +5,31 @@
  */
 package edu.ub.tbd.parser;
 
+import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.beans.LogLineBean;
 import edu.ub.tbd.constants.AppConstants;
-import edu.ub.tbd.entity.Analytics;
 import edu.ub.tbd.entity.App;
-import edu.ub.tbd.entity.Sql_log;
 import edu.ub.tbd.entity.UnParsedSQLs;
 import edu.ub.tbd.entity.Unparsed_log_lines;
 import edu.ub.tbd.entity.User;
+import edu.ub.tbd.service.PersistLogDataService;
 import edu.ub.tbd.service.PersistanceFileService;
 import edu.ub.tbd.service.PersistanceService;
+import edu.ub.tbd.util.MacFileNameFilter;
+import edu.ub.tbd.util.SQLCleanUp;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
+import net.sf.jsqlparser.parser.CCJSqlParser;
+import net.sf.jsqlparser.statement.Statement;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -50,15 +55,12 @@ public class LogParser {
     
     //All Persistance Services below. They must be closed during shutdown => in shutDown()
     private final PersistanceService ps_UnparsedLogLines;
-    private final PersistanceService ps_SqlLog;
-    private final PersistanceService ps_Analytics;
+    private final PersistLogDataService ps_LogDataService;
+    
     /**
      * @deprecated 
      */
     private final PersistanceService ps_UnParsedSQLs;
-    
-    private String longestLine = null; //TODO: <Sankar> Remove in final release
-    private int longestLineLength = 0; //TODO: <Sankar> Remove in final release
 
     public LogParser(String _sourceDir, String _fileExtension) throws Exception{
         this.sourceDir = _sourceDir;
@@ -72,11 +74,8 @@ public class LogParser {
         this.ps_UnparsedLogLines = new PersistanceFileService(AppConstants.DEST_FOLDER, 
                 AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Unparsed_log_lines.class);
         
-        this.ps_SqlLog = new PersistanceFileService(AppConstants.DEST_FOLDER, 
-                AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Sql_log.class);
+        this.ps_LogDataService = new PersistLogDataService();
         
-        this.ps_Analytics = new PersistanceFileService(AppConstants.DEST_FOLDER, 
-                AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Analytics.class);
         
         this.ps_UnParsedSQLs = new PersistanceFileService(AppConstants.DEST_FOLDER, 
                 AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, UnParsedSQLs.class);
@@ -86,10 +85,15 @@ public class LogParser {
         ArrayList<String> logFilesToProcess = getLogFilesToProcessFromBaseGZ();
         int counter = 0;
         for (String filePath : logFilesToProcess) {
-            //System.out.println(filePath);
+            System.out.println(filePath);
             counter += 1;
             //TODO: <Satish> remove this. For testing purpose I am just parsing two files.
-            //if(counter < 2)
+
+            /*
+            if(counter > 5)
+                break;
+            */
+            
             parseSingleLogFile(filePath);
    
         }
@@ -115,7 +119,7 @@ public class LogParser {
         for (File file : files) {
             String name = file.getName();
             if (file.isDirectory()) {
-                iterateFolders(file.listFiles(), filesList); // Calls same method again.
+                iterateFolders(file.listFiles(new MacFileNameFilter()), filesList); // Calls same method again.
             } else if (name.endsWith(fileExtension) && file.getAbsolutePath().contains("SQLite-Query-PhoneLab")) {
                 filesList.add(file.getAbsolutePath());
             }
@@ -123,11 +127,16 @@ public class LogParser {
     }
 
     private void parseSingleLogFile(String _sourceFile) throws Exception{
-        extractUser(_sourceFile);
+        parseSingleLogFile(new File(_sourceFile));
+    }
+    
+    private void parseSingleLogFile(File _sourceFile) throws Exception{
+        int user_id = extractUser(_sourceFile.getAbsolutePath());
         
         BufferedReader br = null;
         String logLine = null;
         int lineNumber = 0;
+        String fileName = _sourceFile.getName();
         
         try {
             
@@ -157,46 +166,54 @@ public class LogParser {
                                 }
                                 break;
                             case "SCHEMA":
-                            case "TABLES":
                                 //TODO: <Professor> What are Actions : ["SCHEMA", "TABLES"]?
                                 //TODO: <Sankar> Actions : ["SCHEMA", "TABLES"] is not into Analytics table yet
-                                {
-                                    //This is a valid SQL log entry carrying line which needs to go to both sql_log & analytics
-                                    Sql_log sql_log = extractAndWriteSQL_Log(logLineBean);
-                                    raw_sql = (String) JSON_Obj.get("Results");
-                                }
+                                logUnparsableLine(_sourceFile.getAbsolutePath(), lineNumber, logLine, "ACTION = SCHEMA");
                                 break;
-                            default:
-                                //This is a valid SQL log entry carrying line which needs to go to both sql_log & analytics
-                                Sql_log sql_log = extractAndWriteSQL_Log(logLineBean);
-                                raw_sql = (String) JSON_Obj.get("Results");
+                            case "TABLES":
+                                logUnparsableLine(_sourceFile.getAbsolutePath(), lineNumber, logLine, "ACTION = TABLES");
+                                break;
+                            default: //TODO : <Sankar> Implement all the pausible ACTION and throw the Assertion for default and throw new AssertionError();
+                                //This is a valid SQL log entry carrying line which needs to be parsed to create LogData Object
                                 
-                                AnalyticsGen analyticsGen = new AnalyticsGen(JSON_Obj, sql_log, logLineBean);
-                                ArrayList<Analytics> list_analytics = analyticsGen.generate();
-                                for(Analytics analytics : list_analytics){
-                                    ps_Analytics.write(analytics);
+                                raw_sql = (String) JSON_Obj.get("Results");
+                                String arguments = (JSON_Obj.get("Arguments(hashCoded)") != null) 
+                                                        ? (String) JSON_Obj.get("Arguments(hashCoded)") 
+                                                        : (String) JSON_Obj.get("Arguments");
+                                String cleanUp_sql = SQLCleanUp.cleanUpSQL(raw_sql, arguments);
+                                StringReader stream = new StringReader(cleanUp_sql);
+                                CCJSqlParser jsqlParser = new CCJSqlParser(stream);
+
+                                Statement stmt = null;
+                                try {
+                                    stmt = jsqlParser.Statement();
+                                } catch (net.sf.jsqlparser.parser.ParseException e) {
+                                    logUnparsedSQLs(_sourceFile.getAbsolutePath(), lineNumber, raw_sql, cleanUp_sql); //TODO: <Sankar> Remove this catch and leave the below catch Throwable after most of the issues are fixed
+                                    throw e;
                                 }
-                                //TODO : <Sankar> Implement all the pausible ACTION and throw the Assertion for default
-                                //throw new AssertionError();
+                                
+                                //At this point the Log line is completely valid.
+                                //Create the LogData Object and persist to file system.
+                                
+                                LogData ld = createLogData(user_id, logLineBean, JSON_Obj, cleanUp_sql, stmt);
+                                ps_LogDataService.write(ld);
                         }
                         
                     } else {
-                        logtUnparsableLine(_sourceFile, lineNumber, logLineBean.getLog_msg(), 
+                        logUnparsableLine(_sourceFile.getAbsolutePath(), lineNumber, logLineBean.getLog_msg(), 
                                 "LogLevel = " + logLineBean.getLog_level());
                     }
                     
                 } catch (ParseException e) {
-                    //System.out.println("LogLine : " + logLine);
-                    logUnparsableLine(_sourceFile, lineNumber, logLine);
+                    logUnparsableLine(_sourceFile.getAbsolutePath(), lineNumber, logLine, "JSON Parse exception");
                 } catch (ArrayIndexOutOfBoundsException e) {
-                    //System.out.println("LogLine : " + logLine);
-                    logtUnparsableLine(_sourceFile, lineNumber, logLine, "ArrayIndexOutOfBoundsException : Invalid number of columns in the Line");
+                    logUnparsableLine(_sourceFile.getAbsolutePath(), lineNumber, logLine, "ArrayIndexOutOfBoundsException : Invalid number of columns in the Line");
                 } catch (net.sf.jsqlparser.parser.ParseException e) {
-                    logUnparsedSQLs(_sourceFile, lineNumber, raw_sql);
+                    //Do Nothing here. As this exception is caught above and handled and re-thrown
                 } catch (Throwable e) {
                     //System.out.println("WEIRD_EXCEPTION | SQL: " + raw_sql);
-//                    e.printStackTrace();
-                    logUnparsedSQLs(_sourceFile, lineNumber, raw_sql); //TODO: <Sankar> Remove this catch and leave the below catch Throwable after most of the issues are fixed
+                    //e.printStackTrace();
+                    logUnparsedSQLs(_sourceFile.getAbsolutePath(), lineNumber, raw_sql, null); //TODO: <Sankar> Remove this catch and leave the below catch Throwable after most of the issues are fixed
                 } finally {
                     parser.reset();
                 }
@@ -212,21 +229,32 @@ public class LogParser {
         }
     }
     
-    private Sql_log extractAndWriteSQL_Log(LogLineBean _logLineBean) throws Exception{
-        int user_id = usersMap.get(_logLineBean.getUser_guid()).getUser_id();
-        int app_id = -1; //If no app_id found this will be -1
-        String key = _logLineBean.get_app_key();
+    private LogData createLogData(int _user_id, LogLineBean _logLineBean, JSONObject _JSON_Obj, String _clean_sql, Statement _stmt){
+        LogData out = new LogData();
         
+        out.setTicks(Long.parseLong(_logLineBean.getTicks()));
+        out.setTicks_ms(Double.parseDouble(_logLineBean.getTicks_ms()));
+        out.setTime_taken((Long) _JSON_Obj.get("Time"));
+        out.setCounter(((Number) _JSON_Obj.get("Counter")).intValue());
+        
+        Number jsonRowsReturnedValue = (Number) _JSON_Obj.get("Rows returned"); // The JSON need not have rows returned for all log lines. Ex: DELETE
+        out.setRows_returned((jsonRowsReturnedValue != null) ? 
+                jsonRowsReturnedValue.intValue() : 0);
+        
+        out.setUser_id(_user_id);
+        
+        String key = _logLineBean.get_app_key();
         String appName = "";
         if ((appName = this.appNameLookUpMap.get(key)) != null) {
             // I have an app name
-            app_id = appsMap.get(appName).getApp_id();
+            out.setApp_id(appsMap.get(appName).getApp_id());
         }
-
-        Sql_log sql_log = new Sql_log(user_id, app_id, _logLineBean.getLog_msg()); 
-        ps_SqlLog.write(sql_log);
         
-        return sql_log;
+        out.setAction((String) _JSON_Obj.get("Action"));
+        out.setSql(_clean_sql);
+        out.setStmt(_stmt);
+        
+        return out;
     }
     
     /**
@@ -238,17 +266,21 @@ public class LogParser {
      * 
      * @param _filePath absolute path of the log file being processed
      */
-    private void extractUser(String _filePath){
+    private int extractUser(String _filePath){
+        int out = -1;
         Matcher m = regx_userGUIDInFilePath.matcher(_filePath);
         if(m.find()){
             String user_guid = m.group(1);
             if(!usersMap.containsKey(user_guid)){
                 usersMap.put(user_guid, new User(user_guid));
             }
+            out = usersMap.get(user_guid).getUser_id();
         }
+        
+        return out;
     }
     
-    private void logtUnparsableLine(String _file_location, int _file_line_number, 
+    private void logUnparsableLine(String _file_location, int _file_line_number, 
             String _raw_data,  String _exception_trace) throws Exception
     {
         
@@ -261,13 +293,13 @@ public class LogParser {
     private void logUnparsableLine(String _file_location, int _file_line_number, 
             String _raw_data) throws Exception
     {
-        logtUnparsableLine(_file_location, _file_line_number, _raw_data, " ");
+        logUnparsableLine(_file_location, _file_line_number, _raw_data, " ");
     }
     
     private void logUnparsedSQLs(String _file_location, int _file_line_number, 
-            String _raw_sql) throws Exception
+            String _raw_sql, String _actual_sql_parsed) throws Exception
     {
-        ps_UnParsedSQLs.write(new UnParsedSQLs(_file_location, _file_line_number, _raw_sql));
+        ps_UnParsedSQLs.write(new UnParsedSQLs(_file_location, _file_line_number, _raw_sql, _actual_sql_parsed));
     }
     
     /**
@@ -316,8 +348,7 @@ public class LogParser {
     public void shutDown() throws Exception{
         persistCacheData();
         ps_UnparsedLogLines.close();
-        ps_SqlLog.close();
-        ps_Analytics.close();
+        ps_LogDataService.close();
         ps_UnParsedSQLs.close();
     }
     
@@ -326,28 +357,5 @@ public class LogParser {
      *   All the below are back-up methods to are TO-BE deleted when decided unfit
      * ##############################################################################
      */
-    
-    /**
-     * @deprecated 
-     * @param _sourceFile
-     * @throws Exception 
-     */
-    private void findLongestLine(String _sourceFile) throws Exception{
-        String logLine = null;
-        
-        GZIPInputStream gzip = new GZIPInputStream(new FileInputStream(_sourceFile));
-        BufferedReader br = new BufferedReader(new InputStreamReader(gzip));
 
-        while ((logLine = br.readLine()) != null) {
-            int currLineLength = logLine.length();
-            if(currLineLength > longestLineLength){
-                longestLineLength = currLineLength;
-                longestLine = logLine;
-            }
-        }
-        br.close();
-    }
- 
-   
-    
 }

@@ -6,12 +6,12 @@
 package edu.ub.tbd;
 
 import edu.ub.tbd.constants.AppConstants;
+import edu.ub.tbd.parser.DataGen;
 import edu.ub.tbd.parser.LogParser;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This is the driver class of the Phone Data Parser when invoked using jar or command line
@@ -24,46 +24,75 @@ public class Main {
      * @param args the command line arguments [-v|V] [-help] [-p "mode"]
      */
     public static void main(String[] args) {
+        extractCommandLineArgs(args);
         
-        for(int i = 0; i < args.length; i++){
-            if (args[i].equals("--src")) {
-            	String sourDir = args[i+1];
-                AppConstants.SRC_DIR = sourDir;
-            }
-            if (args[i].equals("--dest")) {
-            	String destFolder = args[i+1];
-                AppConstants.DEST_FOLDER = destFolder;
-            }
-        }
-        
-        LogParser logParser = null;
-        try {
-            if(startUp()){
-                String srcDIR = AppConstants.SRC_DIR; //Leave this. It helps in reducing Class unload cache. Talk to Sankar before u remove this
-                logParser = new LogParser(srcDIR, AppConstants.SRC_LOG_FILE_EXT);
-                logParser.parseLogsAndWriteFile();
-                
+        if(startUp()){
+            if(AppConstants.MODE_OBJECT_GEN){
+                System.out.println("Running PhoneDataParser in \"OBJECT_GEN\" mode");
+                LogParser logParser = null;
                 try {
-                    shutDown(logParser);
-                } catch (Exception e) {
-                    System.out.println("Improper shutdown of the application");
+                    String srcDIR = AppConstants.SRC_DIR; //Leave this. It helps in reducing Class unload cache. Talk to Sankar before u remove this
+                    logParser = new LogParser(srcDIR, AppConstants.SRC_LOG_FILE_EXT);
+                    logParser.parseLogsAndWriteFile();
+                } catch (Throwable e) {
+                    System.out.println("Log Parsing and Object generation incomplete");
                     e.printStackTrace();
+                } finally {
+                    try {
+                        shutDown(logParser);
+                    } catch (Exception e) {
+                        System.out.println("Unable to shutdown LogParser");
+                        e.printStackTrace();
+                    }
                 }
             } else {
-                System.out.println("Start up of the application failed");
-            }
-            
-        } catch (Throwable e) {
-            e.printStackTrace();
-            if(logParser != null){
+                System.out.println("Running PhoneDataParser in \"DATA_GEN\" mode");
+                AppConstants.SRC_DIR = AppConstants.ABS_OBJECTS_FOLDER;
+                DataGen dataGen = null;
                 try {
-                    logParser.shutDown();
+                    dataGen = new DataGen();
+                    dataGen.run();
                 } catch (Exception ex) {
-                    System.out.println("Unable to shutDown LogParser");
+                    System.out.println("Data generation incomplete");
                     ex.printStackTrace();
+                } finally {
+                    try {
+                        shutDown(dataGen);
+                    } catch (Exception e) {
+                        System.out.println("Unable to shutdown DataGen");
+                        e.printStackTrace();
+                    }
+                }
+                
+            }
+        } else {
+            System.out.println("Start up of the application failed");
+        }
+    }
+    
+    
+    private static void extractCommandLineArgs(String[] _args){
+        for(int i = 0; i < _args.length; i++){
+            if (_args[i].equals("--src") || _args[i].equals("-s")) {
+            	String sourceDir = _args[++i];
+                AppConstants.SRC_DIR = sourceDir;
+            }
+            if (_args[i].equals("--dest") || _args[i].equals("-d")) {
+            	String destFolder = _args[++i];
+                AppConstants.DEST_FOLDER = destFolder;
+                AppConstants.ABS_OBJECTS_FOLDER = AppConstants.DEST_FOLDER + File.separatorChar + AppConstants.OBJECTS_FOLDER;
+                AppConstants.ABS_DATA_FOLDER = AppConstants.DEST_FOLDER + File.separatorChar + AppConstants.DATA_FOLDER;
+            }
+            if (_args[i].equals("--mode") || _args[i].equals("-m")) {
+            	String mode = _args[++i];
+                if(mode.equalsIgnoreCase("obj_gen") || mode.equalsIgnoreCase("o")){
+                    AppConstants.MODE_OBJECT_GEN = true;
+                    AppConstants.MODE_ANALYTICS_GEN = false;
+                } else {
+                    AppConstants.MODE_OBJECT_GEN = false;
+                    AppConstants.MODE_ANALYTICS_GEN = true;
                 }
             }
-            
         }
     }
     
@@ -75,50 +104,58 @@ public class Main {
      * 
      * @throws java.lang.Exception 
      */
-    public static boolean startUp() throws Exception{
-        boolean out = false;
+    public static boolean startUp(){
+        
         File destinationFolder = new File(AppConstants.DEST_FOLDER);
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        try {
-            if(destinationFolder.exists()){
-                int destFileCount = 0;
-                for(File file : destinationFolder.listFiles()) {
-                	if(file.getName().endsWith(AppConstants.OUTPUT_FILE_EXT)) {
-                		destFileCount++;
-                	}
-                }
-                
-                if(destFileCount > 0){
-                    System.out.println("Destination folder \"" + AppConstants.DEST_FOLDER + "\" already has prior run files. \nWould you like to append the new run? \nY --> Continue\nN --> Abort");
-                    String input = null;
-                    while((input = br.readLine()) != null){
-                        if("Y".equalsIgnoreCase(input)){
-                            out = true;
-                            break;
-                        } else if ("N".equalsIgnoreCase(input)){
-                            out = false;
-                            break;
-                        } else {
-                            System.out.println("What did you say??? Enter (Y/N)");
-                        }
-                    }
-                } else {
-                    out = true;
-                }
-            } else {
-                destinationFolder.mkdirs();
-                out = true;
+        if(!destinationFolder.exists()){
+            boolean out = destinationFolder.mkdirs();
+            if(!out){
+                System.out.println("Unable to create folder : " + AppConstants.DEST_FOLDER);
+                return out;
             }
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            br.close();
         }
-        return out;
+        
+        if(AppConstants.MODE_OBJECT_GEN){
+            File objectsFolder = new File(AppConstants.DEST_FOLDER + File.separatorChar + AppConstants.OBJECTS_FOLDER);
+            if(objectsFolder.exists()){
+                System.out.println("OBJECTS folder already exists. Delete it and re-run");
+                return false;
+            } else {
+                boolean out = objectsFolder.mkdir();
+                if(!out){
+                    System.out.println("Unable to create OBJECTS directory");
+                    return out;
+                }
+            }
+        }
+        
+        if(AppConstants.MODE_ANALYTICS_GEN){
+            File dataFolder = new File(AppConstants.DEST_FOLDER + File.separatorChar + AppConstants.DATA_FOLDER);
+            if(dataFolder.exists()){
+                System.out.println("DATA folder already exists. Delete it and re-run");
+                return false;
+            } else {
+                boolean out = dataFolder.mkdir();
+                if(!out){
+                    System.out.println("Unable to create DATA directory");
+                    return out;
+                }
+            }
+        }
+        
+        return true;
     }
     
     public static void shutDown(LogParser _logParser) throws Exception{
-        _logParser.shutDown();
+        if(_logParser != null){
+            _logParser.shutDown();
+        }
+    }
+    
+    public static void shutDown(DataGen _dataGen) throws Exception{
+        if(_dataGen != null){
+            _dataGen.shutDown();
+        }
     }
     
     /*

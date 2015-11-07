@@ -5,6 +5,7 @@
  */
 package edu.ub.tbd.parser;
 
+import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.beans.LogLineBean;
 import edu.ub.tbd.entity.Analytics;
 import edu.ub.tbd.entity.Sql_log;
@@ -53,25 +54,26 @@ import net.sf.jsqlparser.statement.select.SubSelect;
  */
 public class AnalyticsGen {
 
-    private final JSONObject JSON_Obj;
-    private final Sql_log sql_log;
+    private final LogData ld;
+    private final Statement stmt;
     private final Analytics parent_analytics;
     private final ArrayList<Analytics> list_analytics = new ArrayList<>();
-    private final LogLineBean logLineBean;
-
-    public AnalyticsGen(JSONObject _JSON_Obj, Sql_log _sql_log, LogLineBean _logLineBean) {
-        this.JSON_Obj = _JSON_Obj;
-        this.sql_log = _sql_log;
-        this.logLineBean = _logLineBean;
+    
+    public AnalyticsGen(LogData _ld) {
+        this.ld = _ld;
+        this.stmt = _ld.getStmt();
         this.parent_analytics = initParentAnalyticsEntity();
         list_analytics.add(parent_analytics);
     }
     
     public ArrayList<Analytics> generate() throws ParseException, Exception{
         
+        /*
         if(ParserUtil.isPRAGMA_Query(parent_analytics.getParent_sql())){
             parent_analytics.setQuery_type("PRAGMA");
         } else {
+            
+        
             StringReader stream = new StringReader(parent_analytics.getParent_sql());
             CCJSqlParser parser = new CCJSqlParser(stream);
 
@@ -81,6 +83,7 @@ public class AnalyticsGen {
             } catch (ParseException e) {
                 throw e;
             }
+            */
 
             if(stmt != null){
                 if(stmt instanceof Select){
@@ -99,39 +102,29 @@ public class AnalyticsGen {
             } else {
                 throw new Exception("Null Statement");
             }
+        /*
         }
-        
+        */
+            
         return this.list_analytics;
     }
     
     private Analytics initParentAnalyticsEntity(){
         Analytics out = new Analytics();
 
-        out.setTicks(Long.parseLong(logLineBean.getTicks()));
-        out.setTicks_ms(Double.parseDouble(logLineBean.getTicks_ms()));
-        out.setDate_time(Long.parseLong(logLineBean.getTicks()));
-        out.setTime_taken((Long) JSON_Obj.get("Time"));
-        out.setArguments((JSON_Obj.get("Arguments(hashCoded)") != null) 
-                            ? (String) JSON_Obj.get("Arguments(hashCoded)") 
-                            : (String) JSON_Obj.get("Arguments")
-                        ); 
-        
-        out.setCounter(((Number) JSON_Obj.get("Counter")).intValue());
-        
-        Number jsonRowsReturnedValue = (Number) JSON_Obj.get("Rows returned"); // The JSON need not have rows returned for all log lines. Ex: DELETE
-        out.setRows_returned((jsonRowsReturnedValue != null) ? 
-                jsonRowsReturnedValue.intValue() : 0);
-        
-        out.setUser_id(sql_log.getUser_id());
-        out.setApp_id(sql_log.getApp_id());
-        out.setSql_log_id(sql_log.getSql_log_id());
+        out.setTicks(ld.getTicks());
+        out.setTicks_ms(ld.getTicks_ms());
+        out.setDate_time(ld.getTicks());
+        out.setTime_taken(ld.getTime_taken());
+        out.setCounter(ld.getCounter());
+        out.setRows_returned(ld.getRows_returned());
+        out.setUser_id(ld.getUser_id());
+        out.setApp_id(ld.getApp_id());
+        out.setSql_log_id(ld.getSql_log_id());
         out.setParent_analytics_id(-1);
         out.setSql_height(0);
-        out.setQuery_type((String) JSON_Obj.get("Action"));
-        
-        String sql_CleanedUp = SQLCleanUp.cleanUpSQL(
-                (String) JSON_Obj.get("Results"), out.getArguments()); //Note: This must always be after the arguments are set in the Analytics bean
-        out.setParent_sql(sql_CleanedUp);
+        out.setQuery_type(ld.getAction());
+        out.setParent_sql(ld.getSql());
         
         return out;
     }
@@ -281,7 +274,7 @@ public class AnalyticsGen {
 
         @Override
         public void visit(SubJoin _sj) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
     }
     

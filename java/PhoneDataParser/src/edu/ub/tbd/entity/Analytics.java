@@ -23,7 +23,6 @@ public class Analytics extends AbstractEntity implements Comparable<Analytics>{
     @Column public double ticks_ms;
     @Column public Timestamp date_time;
     @Column public long time_taken;
-    @Column public String arguments;
     @Column public int counter;
     @Column public int rows_returned;
     @Column public int user_id;
@@ -209,14 +208,6 @@ public class Analytics extends AbstractEntity implements Comparable<Analytics>{
 
     public void setTime_taken(long _time_taken) {
         this.time_taken = _time_taken;
-    }
-
-    public String getArguments() {
-        return arguments;
-    }
-
-    public void setArguments(String _arguments) {
-        this.arguments = _arguments;
     }
 
     public int getCounter() {

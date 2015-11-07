@@ -25,8 +25,9 @@ import org.junit.Test;
  */
 public class AnalyticsGenTest {
     
-    private final PersistanceService ps_Analytics;
+    //private final PersistanceService ps_Analytics;
     
+    /*
     public AnalyticsGenTest() throws Exception{
         this.ps_Analytics = new PersistanceFileService("/Users/san/UB/CSE-662/Project/Run/TEST", 
                 AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Analytics.class);
@@ -71,4 +72,6 @@ public class AnalyticsGenTest {
         }
     	return null;
     }
+    
+    */
 }
