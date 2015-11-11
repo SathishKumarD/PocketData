@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS sql_log(
 sql_log_id 			INT NOT NULL, 	
 user_id 			INT,			-- FK to user table
 app_id				INT,			-- FK to app table
-raw_data			TEXT,	
+sql_text			TEXT,	
 PRIMARY KEY	 (sql_log_id)
 );
 
@@ -51,7 +51,6 @@ ticks                   BIGINT,         -- ticks are almost 1.4 trillion so INT 
 ticks_ms                DOUBLE,
 date_time               DATETIME,
 time_taken              INT,            -- Time taken to execute the query
-arguments               VARCHAR(200),   -- Arguments for the query (if any)
 counter                 INT,            -- Increment for same App query (from JSON)
 rows_returned           INT,            -- rows returned for the SQL
 user_id                 SMALLINT,       -- FK to user table
@@ -97,7 +96,7 @@ julianDayCount          SMALLINT,
 dateCount               SMALLINT,
 strfTimeCount           SMALLINT,
 totalWhereClauses       SMALLINT,
-curr_sql                VARCHAR(500),
+curr_sql                TEXT,
 PRIMARY KEY	 (analytics_id)
 );
 

@@ -68,7 +68,6 @@ public class Analytics extends AbstractEntity implements Comparable<Analytics>{
     @Column public int julianDayCount;
     @Column public int dateCount;
     @Column public int strfTimeCount;
-    
     @Column public int totalWhereClauses;
     
     public String parent_sql; //Probably this is the only field that is not persisted
