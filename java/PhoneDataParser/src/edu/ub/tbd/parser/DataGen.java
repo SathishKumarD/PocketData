@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 /**
  *
@@ -32,9 +31,10 @@ public class DataGen {
     private final PersistanceService ps_SqlLog;
     private final PersistanceService ps_Analytics;
     private final ConcurrentLinkedQueue<ArrayList<LogData>> QUEUE= new ConcurrentLinkedQueue<>();
-    private final int THREAD_COUNTER = 12;
-    private volatile int THREAD_EXIT_COUNTER = THREAD_COUNTER - 1;
-    private final ExecutorService taskExecutor = Executors.newFixedThreadPool(THREAD_COUNTER);
+    
+    private final int READER_THREAD_COUNT = 16; //This is the only configurable parameter
+    private volatile int THREAD_EXIT_COUNTER = READER_THREAD_COUNT;
+    private final ExecutorService TASK_EXECUTOR = Executors.newFixedThreadPool(READER_THREAD_COUNT + 1); //This one additinal thread is Writer thread
     
     public DataGen() throws Exception {
         this.ps_SqlLog = new PersistanceFileService(AppConstants.ABS_DATA_FOLDER, 
@@ -45,18 +45,16 @@ public class DataGen {
     }
  
     public void run() throws Exception{
-        File obj_folder = new File(AppConstants.ABS_OBJECTS_FOLDER);
-        List<File> users_Folder = getSortedFilesInAFolder(obj_folder);
         
-        for(File user_folder : users_Folder){
-            taskExecutor.execute(new Reader(user_folder));
+        for(int i = 0; i < READER_THREAD_COUNT; i++){
+            TASK_EXECUTOR.execute(new Reader(i, READER_THREAD_COUNT));
         }
         
-        taskExecutor.execute(new Writer());
+        TASK_EXECUTOR.execute(new Writer());
         
-        taskExecutor.shutdown();
+        TASK_EXECUTOR.shutdown();
         
-        while(!taskExecutor.isTerminated()){
+        while(!TASK_EXECUTOR.isTerminated()){
             try {
                 Thread.sleep(30000);
             } catch (InterruptedException e) {
@@ -67,24 +65,33 @@ public class DataGen {
     }
     
     class Reader implements Runnable{
-        private final File userFolder;
+
+        private final File OBJECTS = new File(AppConstants.ABS_OBJECTS_FOLDER);
+        private final int runEach;
+        private final int TOTAL_THREAD_COUNT;
         
-        public Reader(File _userFolder){
-            this.userFolder = _userFolder;
+        public Reader(int _runEach, int _totalThreadCount){
+            this.runEach = _runEach;
+            this.TOTAL_THREAD_COUNT = _totalThreadCount;
         }
         
         @Override
         public void run() {
-            List<File> files = getSortedFilesInAFolder(userFolder);
+            System.out.println("Thread started for ==> " + runEach);
+            List<File> files = getSortedFilesInAFolder_Integer_Sort(OBJECTS);
             for(File f : files){
-                try {
-                    readEachFile(f);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
+                if((Integer.parseInt(f.getName()) % TOTAL_THREAD_COUNT) == runEach){
+                    //System.out.println("Thread - " + runEach + " : Reading File ==> " + f.getName());
+                    try {
+                        readEachFile(f);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
                 }
+                
             }
             THREAD_EXIT_COUNTER--;
-            System.out.println("Read all files for user ==> " + userFolder.getName());
+            System.out.println("Read all files for ==> " + runEach);
         }
         
         private void readEachFile(File _f) throws Exception{
@@ -107,15 +114,21 @@ public class DataGen {
                         break;
                     } else {
                         try {
-                            Thread.sleep(100);
+                            Thread.sleep(1000);
                         } catch (InterruptedException ex) {
                             ex.printStackTrace();
                         }
                     }
                 } else {
-                    ArrayList<LogData> lds = QUEUE.poll();
+                    ArrayList<ArrayList<LogData>> ldss = new ArrayList<>();
+                    while(!QUEUE.isEmpty()){
+                        ldss.add(QUEUE.poll());
+                    }
                     try {
-                        processAndWriteEachBatch(lds);
+                        for(ArrayList<LogData> lds : ldss){
+                            processAndWriteEachBatch(lds);
+                        }
+                        
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -144,16 +157,23 @@ public class DataGen {
         
     }
     
-    private List<File> getSortedFilesInAFolder(File _folder){
+    private static List<File> getSortedFilesInAFolder_Integer_Sort(File _folder){
         File [] arr_files = _folder.listFiles(new MacFileNameFilter());
         List<File> list_files = Arrays.asList(arr_files);
+        Collections.sort(list_files, (File f1, File f2) -> (new Integer(f1.getName()).compareTo(new Integer(f2.getName()))) );
         return list_files;
     }
-    
-    
     
     public void shutDown() throws Exception{
         ps_SqlLog.close();
         ps_Analytics.close();
+    }
+    
+    public static void main(String[] args) {
+        List<File> files = getSortedFilesInAFolder_Integer_Sort(new File(AppConstants.ABS_OBJECTS_FOLDER));
+        for(File f : files){
+            System.out.println(f.getName());
+        }
+        
     }
 }
