@@ -14,6 +14,10 @@ import java.io.File;
 public class AppConstants {
     public static String SRC_DIR = "/Users/san/UB/CSE-662/Project/DataSet/logcat";
     public static String DEST_FOLDER = "/Users/san/UB/CSE-662/Project/Run/OUTPUT";
+    
+    //public static String SRC_DIR = "/Users/san/UB/CSE-662/Project/DataSet/logcat";
+    //public static String DEST_FOLDER = "/home/csgrad/sankarav/OUTPUT";
+    
     public static final String OBJECTS_FOLDER = "OBJECTS";
     public static String ABS_OBJECTS_FOLDER = DEST_FOLDER + File.separatorChar + OBJECTS_FOLDER;
     public static final String DATA_FOLDER = "DATA";

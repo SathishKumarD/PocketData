@@ -17,9 +17,8 @@ import java.io.File;
  * @author san
  */
 public class PersistLogDataService {
-    private String OUTPUT_FOLDER;
-    private BufferedLogDataWriter writer;
-    private int user_id_in_progress;
+    private final String OUTPUT_FOLDER = AppConstants.ABS_OBJECTS_FOLDER;
+    private final BufferedLogDataWriter writer = new BufferedLogDataWriter();
     private final int bufferSize;
     
     @Deprecated
@@ -29,30 +28,13 @@ public class PersistLogDataService {
     }
     
     public PersistLogDataService(){
-        this(5000); //Cache issue of AppConstants final static values
+        this(50000); //Cache issue of AppConstants final static values
     }
     
     public void write(LogData _obj){
-        if(writer != null){
-            if(user_id_in_progress == _obj.getUser_id()){
-                writer.add(_obj);
-                if(bufferSize == writer.totalObjsInBuffer()){
-                    flush();
-                }
-            } else {
-                flush();
-                writer = null;
-                write(_obj);
-            }
-        } else {
-            writer = new BufferedLogDataWriter();
-            user_id_in_progress = _obj.getUser_id();
-            OUTPUT_FOLDER = AppConstants.ABS_OBJECTS_FOLDER + File.separatorChar + user_id_in_progress;
-            File outputFolder = new File(OUTPUT_FOLDER);
-            if(!outputFolder.exists()){
-                outputFolder.mkdirs();
-            }
-            write(_obj);
+        writer.add(_obj);
+        if(bufferSize == writer.totalObjsInBuffer()){
+            flush();
         }
     }
     

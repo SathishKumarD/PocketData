@@ -17,6 +17,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -28,17 +29,19 @@ import java.util.concurrent.Executors;
  * @author san
  */
 public class DataGen {
-    private final PersistanceService ps_SqlLog;
+    //private final PersistanceService ps_SqlLog;
     private final PersistanceService ps_Analytics;
     private final ConcurrentLinkedQueue<ArrayList<LogData>> QUEUE= new ConcurrentLinkedQueue<>();
     
-    private final int READER_THREAD_COUNT = 16; //This is the only configurable parameter
+    private final int READER_THREAD_COUNT = 24; //This is the only configurable parameter
     private volatile int THREAD_EXIT_COUNTER = READER_THREAD_COUNT;
     private final ExecutorService TASK_EXECUTOR = Executors.newFixedThreadPool(READER_THREAD_COUNT + 1); //This one additinal thread is Writer thread
     
     public DataGen() throws Exception {
+        /*
         this.ps_SqlLog = new PersistanceFileService(AppConstants.ABS_DATA_FOLDER, 
                 AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Sql_log.class);
+        */
         
         this.ps_Analytics = new PersistanceFileService(AppConstants.ABS_DATA_FOLDER, 
                 AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Analytics.class);
@@ -114,7 +117,7 @@ public class DataGen {
                         break;
                     } else {
                         try {
-                            Thread.sleep(1000);
+                            Thread.sleep(500);
                         } catch (InterruptedException ex) {
                             ex.printStackTrace();
                         }
@@ -144,8 +147,8 @@ public class DataGen {
         }
         
         private void parseEachLogData(LogData _ld) throws Exception{
-            Sql_log sql_log = new Sql_log(_ld);
-            ps_SqlLog.write(sql_log);
+            //Sql_log sql_log = new Sql_log(_ld);
+            //ps_SqlLog.write(sql_log);
 
             AnalyticsGen analyticsGen = new AnalyticsGen(_ld);
 
@@ -160,12 +163,15 @@ public class DataGen {
     private static List<File> getSortedFilesInAFolder_Integer_Sort(File _folder){
         File [] arr_files = _folder.listFiles(new MacFileNameFilter());
         List<File> list_files = Arrays.asList(arr_files);
-        Collections.sort(list_files, (File f1, File f2) -> (new Integer(f1.getName()).compareTo(new Integer(f2.getName()))) );
+        Collections.sort(list_files, new Comparator<File>() {
+                                            public int compare(File f1, File f2) { return new Integer(f1.getName()).compareTo(new Integer(f2.getName())); } 
+                                            public boolean equals(Object obj) { return this.equals(obj); }
+                                        } );
         return list_files;
     }
     
     public void shutDown() throws Exception{
-        ps_SqlLog.close();
+        //ps_SqlLog.close();
         ps_Analytics.close();
     }
     

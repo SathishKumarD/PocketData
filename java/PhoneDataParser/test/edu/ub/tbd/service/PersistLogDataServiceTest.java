@@ -7,6 +7,7 @@ package edu.ub.tbd.service;
 
 import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.constants.AppConstants;
+import edu.ub.tbd.util.MacFileNameFilter;
 import edu.ub.tbd.util.ObjectSerializerUtil;
 import java.io.File;
 import java.io.IOException;
@@ -206,8 +207,8 @@ public class PersistLogDataServiceTest {
         ArrayList<LogData> out = new ArrayList<>();
         
         File OBJECTS_FOLDER = new File(AppConstants.ABS_OBJECTS_FOLDER);
-        for(File user_folder : OBJECTS_FOLDER.listFiles((File dir, String name) -> name.charAt(0) != '.')){
-            for(File f : user_folder.listFiles((File dir, String name) -> name.charAt(0) != '.')){
+        for(File user_folder : OBJECTS_FOLDER.listFiles(new MacFileNameFilter())){
+            for(File f : user_folder.listFiles(new MacFileNameFilter())){
                 ArrayList<LogData> dataFile = ObjectSerializerUtil.read(f);
                 for(LogData ld : dataFile){
                     out.add(ld);
