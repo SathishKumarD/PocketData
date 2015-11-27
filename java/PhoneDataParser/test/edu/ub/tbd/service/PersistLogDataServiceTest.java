@@ -8,13 +8,12 @@ package edu.ub.tbd.service;
 import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.constants.AppConstants;
 import edu.ub.tbd.util.MacFileNameFilter;
+import edu.ub.tbd.util.JavaObjectSerializerUtil;
 import edu.ub.tbd.util.ObjectSerializerUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
@@ -204,12 +203,13 @@ public class PersistLogDataServiceTest {
     }
     
     private ArrayList<LogData> getActualSerializedData(){
+        ObjectSerializerUtil serializer = new JavaObjectSerializerUtil();
         ArrayList<LogData> out = new ArrayList<>();
         
         File OBJECTS_FOLDER = new File(AppConstants.ABS_OBJECTS_FOLDER);
         for(File user_folder : OBJECTS_FOLDER.listFiles(new MacFileNameFilter())){
             for(File f : user_folder.listFiles(new MacFileNameFilter())){
-                ArrayList<LogData> dataFile = ObjectSerializerUtil.read(f);
+                ArrayList<LogData> dataFile = serializer.read(f);
                 for(LogData ld : dataFile){
                     out.add(ld);
                 }

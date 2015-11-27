@@ -7,6 +7,7 @@ package edu.ub.tbd.parser;
 
 import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.constants.AppConstants;
+import edu.ub.tbd.util.JavaObjectSerializerUtil;
 import edu.ub.tbd.util.ObjectSerializerUtil;
 import java.io.File;
 import java.util.ArrayList;
@@ -43,7 +44,8 @@ public class ObjectSerializationTest {
     
     private ArrayList<LogData> getActualSerializedData(){
         File f = new File("/Users/san/UB/CSE-662/Project/Run/OUTPUT/OBJECTS/1/0");
-        return ObjectSerializerUtil.read(f);
+        ObjectSerializerUtil serializer = new JavaObjectSerializerUtil();
+        return serializer.read(f);
     }
     
 }

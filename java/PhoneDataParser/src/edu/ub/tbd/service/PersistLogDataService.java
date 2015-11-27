@@ -7,9 +7,10 @@ package edu.ub.tbd.service;
 
 import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.constants.AppConstants;
+import edu.ub.tbd.util.JavaObjectSerializerUtil;
+import edu.ub.tbd.util.KryoObjectSerializerUtil;
 import edu.ub.tbd.util.ObjectSerializerUtil;
 import java.util.ArrayList;
-import static edu.ub.tbd.constants.AppConstants.OBJ_FILE_BUFFER_SIZE;
 import java.io.File;
 
 /**
@@ -28,7 +29,7 @@ public class PersistLogDataService {
     }
     
     public PersistLogDataService(){
-        this(50000); //Cache issue of AppConstants final static values
+        this(5000); //Cache issue of AppConstants final static values
     }
     
     public void write(LogData _obj){
@@ -50,6 +51,8 @@ public class PersistLogDataService {
         private ArrayList<LogData> OBJ_COLLECTION;
         private int totalObjsInBuffer; //Hypothetically OBJ_COLLECTION.size() should work but it isnt. Hence dont change this
         private int totalFilesWritten;
+//        private final ObjectSerializerUtil serializer = new JavaObjectSerializerUtil();
+        private final ObjectSerializerUtil serializer = new KryoObjectSerializerUtil();
 
         public BufferedLogDataWriter(){
             OBJ_COLLECTION = new ArrayList<>(bufferSize);
@@ -63,7 +66,7 @@ public class PersistLogDataService {
         private void flush(String _folderName){
             if(OBJ_COLLECTION != null && !OBJ_COLLECTION.isEmpty()){
                 String fileName = _folderName + File.separatorChar + totalFilesWritten++;
-                ObjectSerializerUtil.serialize(fileName, OBJ_COLLECTION);
+                serializer.serialize(fileName, OBJ_COLLECTION);
                 OBJ_COLLECTION = new ArrayList<>(bufferSize);
                 totalObjsInBuffer = 0;
             }
