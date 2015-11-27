@@ -81,7 +81,7 @@ public class DataGen {
         
         while(!TASK_EXECUTOR.isTerminated()){
             try {
-                Thread.sleep(30000);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -110,6 +110,11 @@ public class DataGen {
                 if((Integer.parseInt(f.getName()) % TOTAL_THREAD_COUNT) == runEach){
                     //System.out.println("Thread - " + runEach + " : Reading File ==> " + f.getName());
                     try {
+                        synchronized(QUEUE){
+                            if(QUEUE.size() > (100 + (runEach * 10))){
+                                QUEUE.wait();
+                            }
+                        }
                         readEachFile(f);
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -122,6 +127,7 @@ public class DataGen {
         }
         
         private void readEachFile(File _f) throws Exception{
+            //System.out.println("Thread - " + runEach + " : Reading file > " + _f.getName());
             ArrayList<LogData> lds = serializer.read(_f);
             QUEUE.add(lds);
         }
@@ -129,6 +135,7 @@ public class DataGen {
     
     class Writer implements Runnable{
         boolean isProcessingComplete = false;
+        int counter;
         
         @Override
         public void run() {
@@ -141,7 +148,7 @@ public class DataGen {
                         break;
                     } else {
                         try {
-                            Thread.sleep(500);
+                            Thread.sleep(100);
                         } catch (InterruptedException ex) {
                             ex.printStackTrace();
                         }
@@ -150,12 +157,17 @@ public class DataGen {
                     ArrayList<ArrayList<LogData>> ldss = new ArrayList<>();
                     while(!QUEUE.isEmpty()){
                         ldss.add(QUEUE.poll());
+                        //System.out.println("Thread - Writer : Polling " + counter++);
                     }
                     try {
                         for(ArrayList<LogData> lds : ldss){
                             processAndWriteEachBatch(lds);
                         }
-                        
+                        synchronized(QUEUE){
+                            if(QUEUE.size() < 25){
+                                QUEUE.notifyAll();
+                            }
+                        }
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -166,6 +178,7 @@ public class DataGen {
     }
     
     private void processAndWriteEachBatch(final ArrayList<LogData> _lds) throws Exception{
+        //System.out.println("Thread - Writer : Processing processAndWriteEachBatch()");
         for(LogData ld : _lds){
             parseEachLogData(ld);
         }
