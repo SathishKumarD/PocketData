@@ -25,8 +25,7 @@ public class AppConstants {
     
     public static boolean MODE_OBJECT_GEN;
     public static boolean MODE_ANALYTICS_GEN;
-    
-    public final static String DEST_FILE = "insert_analytics_data.sql";
+    public static boolean MODE_SCHEMA_GEN;
     
     public final static String SRC_LOG_FILE_EXT = ".gz";
     public final static String SRC_LOG_FILE_VALUE_SEPERATOR = "\t";
@@ -37,8 +36,6 @@ public class AppConstants {
     public final static boolean OUTPUT_FILE_WRITE_HEADER = true;
     
     public final static boolean CUMULATE_ANALYTICS_TO_PARENT = true;
-    
-    public final static int TOTAL_NUM_OF_USERS_IN_LOG = 11;
     
     //Serialization constants
     public final static int OBJ_FILE_BUFFER_SIZE = 3000;

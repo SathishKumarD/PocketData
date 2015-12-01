@@ -30,7 +30,7 @@ import java.util.concurrent.Executors;
  *
  * @author san
  */
-public class DataGen {
+public class AnalyticsGen_Driver {
     //private final PersistanceService ps_SqlLog;
     private final PersistanceService ps_Analytics;
     private final ConcurrentLinkedQueue<ArrayList<LogData>> QUEUE= new ConcurrentLinkedQueue<>();
@@ -40,7 +40,7 @@ public class DataGen {
     private volatile int THREAD_EXIT_COUNTER = READER_THREAD_COUNT;
     private final ExecutorService TASK_EXECUTOR = Executors.newFixedThreadPool(READER_THREAD_COUNT + 1); //This one additinal thread is Writer thread
     
-    public DataGen() throws Exception {
+    public AnalyticsGen_Driver() throws Exception {
         /*
         this.ps_SqlLog = new PersistanceFileService(AppConstants.ABS_DATA_FOLDER, 
                 AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Sql_log.class);

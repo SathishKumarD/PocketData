@@ -6,7 +6,7 @@
 package edu.ub.tbd;
 
 import edu.ub.tbd.constants.AppConstants;
-import edu.ub.tbd.parser.DataGen;
+import edu.ub.tbd.parser.AnalyticsGen_Driver;
 import edu.ub.tbd.parser.LogParser;
 
 import java.io.File;
@@ -45,12 +45,12 @@ public class Main {
                         e.printStackTrace();
                     }
                 }
-            } else {
+            } else if(AppConstants.MODE_ANALYTICS_GEN) {
                 System.out.println("Running PhoneDataParser in \"DATA_GEN\" mode");
                 AppConstants.SRC_DIR = AppConstants.ABS_OBJECTS_FOLDER;
-                DataGen dataGen = null;
+                AnalyticsGen_Driver dataGen = null;
                 try {
-                    dataGen = new DataGen();
+                    dataGen = new AnalyticsGen_Driver();
                     dataGen.run();
                 } catch (Exception ex) {
                     System.out.println("Data generation incomplete");
@@ -63,6 +63,8 @@ public class Main {
                         e.printStackTrace();
                     }
                 }
+                
+            } else {
                 
             }
         } else {
@@ -88,9 +90,15 @@ public class Main {
                 if(mode.equalsIgnoreCase("obj_gen") || mode.equalsIgnoreCase("o")){
                     AppConstants.MODE_OBJECT_GEN = true;
                     AppConstants.MODE_ANALYTICS_GEN = false;
-                } else {
+                    AppConstants.MODE_SCHEMA_GEN = false;
+                } else if(mode.equalsIgnoreCase("analytics_gen") || mode.equalsIgnoreCase("a")) {
                     AppConstants.MODE_OBJECT_GEN = false;
                     AppConstants.MODE_ANALYTICS_GEN = true;
+                    AppConstants.MODE_SCHEMA_GEN = false;
+                } else {
+                    AppConstants.MODE_OBJECT_GEN = false;
+                    AppConstants.MODE_ANALYTICS_GEN = false;
+                    AppConstants.MODE_SCHEMA_GEN = true;
                 }
             }
         }
@@ -129,7 +137,7 @@ public class Main {
             }
         }
         
-        if(AppConstants.MODE_ANALYTICS_GEN){
+        if(AppConstants.MODE_ANALYTICS_GEN || AppConstants.MODE_SCHEMA_GEN){
             File dataFolder = new File(AppConstants.DEST_FOLDER + File.separatorChar + AppConstants.DATA_FOLDER);
             if(dataFolder.exists()){
                 System.out.println("DATA folder already exists. Delete it and re-run");
@@ -152,7 +160,7 @@ public class Main {
         }
     }
     
-    public static void shutDown(DataGen _dataGen) throws Exception{
+    public static void shutDown(AnalyticsGen_Driver _dataGen) throws Exception{
         if(_dataGen != null){
             _dataGen.shutDown();
         }
