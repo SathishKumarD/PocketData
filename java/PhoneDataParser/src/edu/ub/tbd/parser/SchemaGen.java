@@ -40,6 +40,7 @@ import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.FromItemVisitor;
 import net.sf.jsqlparser.statement.select.SubJoin;
 import net.sf.jsqlparser.statement.select.SubSelect;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -51,62 +52,45 @@ public class SchemaGen {
     private final Statement stmt;
     private final Analytics parent_analytics;
     private final ArrayList<Analytics> list_analytics = new ArrayList<>();
-    private final HashMap<String, TableBean> APP_SCHEMA;
     
-    public SchemaGen(LogData _ld, HashMap<Integer, HashMap<String, TableBean>> _schemas) {
+    
+    public SchemaGen(LogData _ld) {
         this.ld = _ld;
         this.stmt = _ld.getStmt();
         this.parent_analytics = initParentAnalyticsEntity();
         list_analytics.add(parent_analytics);
-        HashMap<String, TableBean> _APP_SCHEMA = _schemas.get(_ld.getApp_id());
-        if(_APP_SCHEMA != null){
-            this.APP_SCHEMA = _APP_SCHEMA;
-        } else {
-            this.APP_SCHEMA = new HashMap<>();
-        }
     }
     
-    public ArrayList<Analytics> generate() throws ParseException, Exception{
+    public HashMap<String, TableBean> generate() throws ParseException, Exception{
         
         /*
         if(ParserUtil.isPRAGMA_Query(parent_analytics.getParent_sql())){
             parent_analytics.setQuery_type("PRAGMA");
-        } else {
-            
-        
-            StringReader stream = new StringReader(parent_analytics.getParent_sql());
-            CCJSqlParser parser = new CCJSqlParser(stream);
-
-            Statement stmt = null;
-            try {
-                stmt = parser.Statement();
-            } catch (ParseException e) {
-                throw e;
-            }
-            */
-
-            if(stmt != null){
-                if(stmt instanceof Select){
-                    Select select = (Select) stmt;
-                    SelectUnionParser su_parser = new SelectUnionParser(parent_analytics, null, parent_analytics.getParent_sql());
-                    select.getSelectBody().accept(su_parser);
-                } else if (stmt instanceof Delete) {
-                    //TODO: <Sankar> Implement this
-                } else if (stmt instanceof Update) {
-                    //TODO: <Sankar> Implement this
-                } else if (stmt instanceof Insert) {
-                    //TODO: <Sankar> Implement this
-                } else {
-                    throw new IncompleteLogicError("Handle other statement types");
-                }
-            } else {
-                throw new Exception("Null Statement");
-            }
-        /*
         }
         */
+
+        HashMap<String, TableBean> extractedSchemaFromSQL = null;
+        
+        if(stmt != null){
+            if(stmt instanceof Select){
+                Select select = (Select) stmt;
+                SelectUnionParser su_parser = new SelectUnionParser(parent_analytics, null, parent_analytics.getParent_sql());
+                select.getSelectBody().accept(su_parser);
+                extractedSchemaFromSQL = su_parser.getExtractedSchema();
+            } else if (stmt instanceof Delete) {
+                //TODO: <Sankar> Implement this
+            } else if (stmt instanceof Update) {
+                //TODO: <Sankar> Implement this
+            } else if (stmt instanceof Insert) {
+                //TODO: <Sankar> Implement this
+            } else {
+                throw new IncompleteLogicError("Handle other statement types");
+            }
+        } else {
+            throw new Exception("Null Statement");
+        }
             
-        return this.list_analytics;
+        return extractedSchemaFromSQL;
     }
     
     private Analytics initParentAnalyticsEntity(){
@@ -187,11 +171,16 @@ public class SchemaGen {
 
         private final Analytics currAnalytics;
         private final Analytics parentAnalytics;
+        private final HashMap<String, TableBean> EXTRACTED_SCHEMA = new HashMap<>();
         
         public SelectUnionParser(Analytics _currAnalytics, Analytics _parentAnalytics, String _curr_sql){
             this.currAnalytics = _currAnalytics;
             this.parentAnalytics = _parentAnalytics;
             this.currAnalytics.setCurr_sql(_curr_sql);
+        }
+        
+        public HashMap<String, TableBean> getExtractedSchema(){
+            return EXTRACTED_SCHEMA;
         }
 
         public Analytics getCurrAnalytics() {
@@ -261,6 +250,11 @@ public class SchemaGen {
 
         @Override
         public void visit(Table _table) {
+            TableBean tbl_bean = new TableBean(_table.getName(), _table.getAlias());
+            
+            tbl_bean.setSchemaName(_table.getSchemaName());
+            tbl_bean.setWholeTblName(_table.getWholeTableName());
+            
             currAnalytics.setNoOfRelations(currAnalytics.getNoOfRelations() + 1);
         }
 

@@ -8,6 +8,7 @@ package edu.ub.tbd.beans;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -17,9 +18,11 @@ public class TableBean {
     
     private String tbl_name;
     private String tbl_alias;
+    private String wholeTblName;
+    private String schemaName;
     private Map<String, ColumnBean> columns = new HashMap<>();
 
-    public TableBean(){
+    private TableBean(){
         
     }
     
@@ -28,8 +31,8 @@ public class TableBean {
     }
 
     public TableBean(String _tbl_name, String _tbl_alias) {
-        this.tbl_name = _tbl_name;
-        this.tbl_alias = _tbl_alias;
+        this.tbl_name = StringUtils.lowerCase(_tbl_name);
+        this.tbl_alias = StringUtils.lowerCase(_tbl_alias);
     }
     
     public void addColumn(ColumnBean _column){
@@ -51,9 +54,25 @@ public class TableBean {
         }
     }
     
+    public void setTbl_name(String _tbl_name) {
+        this.tbl_name = StringUtils.lowerCase(_tbl_name);
+    }
+    
+    public void setTbl_alias(String _tbl_alias) {
+        this.tbl_alias = StringUtils.lowerCase(_tbl_alias);
+    }
+    
+    public void setWholeTblName(String _wholeTblName) {
+        this.wholeTblName = StringUtils.lowerCase(_wholeTblName);
+    }
+    
+    public void setSchemaName(String _schemaName) {
+        this.schemaName = StringUtils.lowerCase(_schemaName);
+    }
+    
     /***************************************************************************
      ***************************************************************************
-     *******************        GETTERS & SETTERS            *******************
+     *************        GENERATED - GETTERS & SETTERS         ****************
      ***************************************************************************
      ***************************************************************************
      */
@@ -62,20 +81,24 @@ public class TableBean {
         return tbl_name;
     }
 
-    public void setTbl_name(String _tbl_name) {
-        this.tbl_name = _tbl_name;
-    }
-
     public String getTbl_alias() {
         return tbl_alias;
-    }
-
-    public void setTbl_alias(String _tbl_alias) {
-        this.tbl_alias = _tbl_alias;
     }
 
     public Map<String, ColumnBean> getColumns() {
         return columns;
     }
 
+    public String getWholeTblName() {
+        return wholeTblName;
+    }
+
+    public String getSchemaName() {
+        return schemaName;
+    }
+
+    
+
+    
+    
 }

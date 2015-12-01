@@ -185,8 +185,7 @@ public class SchemaGen_Driver {
     }
     
     private void parseEachLogData(LogData _ld) throws Exception{
-        AnalyticsGen analyticsGen = new AnalyticsGen(_ld);
-        SchemaGen schemaGen = new SchemaGen(_ld, SCHEMAS);
+        SchemaGen schemaGen = new SchemaGen(_ld);
 
         HashMap<String, TableBean> extractedSchema = schemaGen.generate();
         updateSCHEMAS(extractedSchema, _ld.getApp_id());
@@ -196,33 +195,32 @@ public class SchemaGen_Driver {
             final int _app_id)
     {
         //TODO: <Sankar> write code to update the SCHEMAS
-        HashMap<String, TableBean> APP_SCHEMA = SCHEMAS.get(_app_id);
-        if(APP_SCHEMA == null){
-            APP_SCHEMA = new HashMap<>();
-            SCHEMAS.put(_app_id, APP_SCHEMA);
+        HashMap<String, TableBean> baseSchemaOfApp = SCHEMAS.get(_app_id);
+        if(baseSchemaOfApp == null){
+            baseSchemaOfApp = new HashMap<>();
+            SCHEMAS.put(_app_id, baseSchemaOfApp);
         }
         
-        updateSCHEMAS(APP_SCHEMA, _extractedSchema);
+        updateSCHEMAS(baseSchemaOfApp, _extractedSchema);
     }
     
-    private void updateSCHEMAS(final HashMap<String, TableBean> _APP_SCHEMA, 
+    private void updateSCHEMAS(final HashMap<String, TableBean> _baseSchemaOfApp, 
             final HashMap<String, TableBean> _extractedSchema)
     {
         for(TableBean tbl : _extractedSchema.values()){
-            updateSCHEMAS(_APP_SCHEMA, tbl);
+            updateSCHEMAS(_baseSchemaOfApp, tbl);
         }
     }
     
-    private void updateSCHEMAS(final HashMap<String, TableBean> _APP_SCHEMA, 
+    private void updateSCHEMAS(final HashMap<String, TableBean> _baseSchemaOfApp, 
             final TableBean _extractedTbl)
     {
-        TableBean baseTbl = _APP_SCHEMA.get(_extractedTbl.getTbl_name());
-        if(baseTbl == null){
-            baseTbl = _extractedTbl;
-            _APP_SCHEMA.put(_extractedTbl.getTbl_name(), _extractedTbl);
+        TableBean baseTbl = _baseSchemaOfApp.get(_extractedTbl.getTbl_name());
+        if(baseTbl != null){
+            baseTbl.addAllColumns(_extractedTbl.getColumns().values());
+        } else {
+            _baseSchemaOfApp.put(_extractedTbl.getTbl_name(), _extractedTbl);
         }
-        
-        baseTbl.addAllColumns(_extractedTbl.getColumns().values());
     }
     
     private static List<File> getSortedFilesInAFolder_Integer_Sort(File _folder){
