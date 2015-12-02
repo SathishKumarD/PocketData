@@ -39,6 +39,12 @@ public class ColumnBean {
         this.confirmed = _confirmed;
     }
 
+    public StringBuilder getXML(){
+        StringBuilder out = new StringBuilder();
+        out.append("<column name='"+ col_name +"' confirmed='"+ confirmed +"' />");
+        return out;
+    }
+    
     @Override
     public int hashCode() {
         return this.col_name.hashCode();

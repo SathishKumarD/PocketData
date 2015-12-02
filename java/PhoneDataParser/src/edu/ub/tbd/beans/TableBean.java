@@ -54,6 +54,16 @@ public class TableBean {
         }
     }
     
+    public StringBuilder getXML(){
+        StringBuilder out = new StringBuilder();
+        out.append("\t").append("<table name='"+ tbl_name +"' >");
+        for(ColumnBean col : columns.values()){
+            out.append("\t").append(col.getXML());
+        }
+        out.append("\t").append("</table>");
+        return out;
+    }
+    
     public void setTbl_name(String _tbl_name) {
         this.tbl_name = StringUtils.lowerCase(_tbl_name);
     }
