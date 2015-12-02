@@ -105,7 +105,7 @@ public class SchemaGen {
     }
 
     public HashMap<String, TableBean> generate() throws ParseException, Exception {
-
+    	// Test Commit
         /*
          if(ParserUtil.isPRAGMA_Query(parent_analytics.getParent_sql())){
          parent_analytics.setQuery_type("PRAGMA");
