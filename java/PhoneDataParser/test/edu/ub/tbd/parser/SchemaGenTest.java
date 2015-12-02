@@ -19,7 +19,7 @@ public class SchemaGenTest {
 	@Test
     public void testGenerate() throws Exception {
         
-        String sql = "SELECT a,b,c FROM sms";
+        String sql = "SELECT s.a,d.b,c FROM sms s join call d WHERE s.k > 5 and d.f > 10";
         //String sql = "SELECT thread_id FROM (SELECT _id, thread_id FROM pdu WHERE (msg_box=3))"; // PASS
         LogData ld = getDummyLogDataBean(sql);
         
@@ -28,7 +28,6 @@ public class SchemaGenTest {
         Iterator<Entry<String, TableBean>> iterator = tableBean.entrySet().iterator();
         while(iterator.hasNext()) {
         	Entry<String, TableBean> next = iterator.next();
-        	TableBean bean = next.getValue();
         	System.out.println(next.getKey() + " - " + next.getValue().getColumns());
         }
     }
