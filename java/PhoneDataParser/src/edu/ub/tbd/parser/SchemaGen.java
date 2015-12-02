@@ -69,9 +69,6 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.select.SelectItemVisitor;
 import net.sf.jsqlparser.statement.select.SelectVisitor;
 import net.sf.jsqlparser.statement.select.Union;
-//import net.sf.jsqlparser.statement.select.SetOperation;
-//import net.sf.jsqlparser.statement.select.SetOperationList;
-//import net.sf.jsqlparser.statement.select.WithItem;
 import net.sf.jsqlparser.statement.update.Update;
 import edu.ub.tbd.constants.AppConstants;
 import edu.ub.tbd.beans.TableBean;
@@ -84,7 +81,6 @@ import net.sf.jsqlparser.statement.select.FromItemVisitor;
 import net.sf.jsqlparser.statement.select.SubJoin;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
-import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -105,7 +101,6 @@ public class SchemaGen {
     }
 
     public HashMap<String, TableBean> generate() throws ParseException, Exception {
-    	// Test Commit
         /*
          if(ParserUtil.isPRAGMA_Query(parent_analytics.getParent_sql())){
          parent_analytics.setQuery_type("PRAGMA");
@@ -248,7 +243,16 @@ public class SchemaGen {
             //Parse From statements
             FromItem fromItem = _ps.getFromItem();
             fromItem.accept(this);
-
+            
+            List<Join> joins = _ps.getJoins();
+            if(joins != null && joins.size() > 0) {
+            	for(int i = 0; i < joins.size(); i++) {
+            		Join join = joins.get(i);
+            		FromItem rightItem = join.getRightItem();
+            		rightItem.accept(this);
+            	}
+            }
+            
             //Parse whereclauses
             int totalWhereClauses = 0;
             if (_ps.getWhere() != null) {
@@ -306,7 +310,10 @@ public class SchemaGen {
 
         @Override
         public void visit(SubJoin _sj) {
-            //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        	_sj.getLeft().accept(this);
+        	Join join = _sj.getJoin();
+        	FromItem rightItem = join.getRightItem();
+        	rightItem.accept(this);
         }
 
         public class ExpressionVisitorImpl implements ExpressionVisitor {
