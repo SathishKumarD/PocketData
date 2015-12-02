@@ -57,7 +57,7 @@ public class SchemaGen {
                 Select select = (Select) stmt;
                 SelectUnionParser su_parser = new SelectUnionParser(stmt.toString());
                 select.getSelectBody().accept(su_parser);
-                extractedSchemaFromSQL = su_parser.getExtractedSchema();
+                extractedSchemaFromSQL = su_parser.extractSchema();
             } else if (stmt instanceof Delete) {
                 //TODO: <Sankar> Implement this
             } else if (stmt instanceof Update) {
@@ -83,7 +83,14 @@ public class SchemaGen {
             this.curr_sql = _curr_sql;
         }
 
-        public HashMap<String, TableBean> getExtractedSchema() {
+        public HashMap<String, TableBean> extractSchema() {
+            if(EXTRACTED_SCHEMA.size() == 1){
+                for(TableBean tbl : EXTRACTED_SCHEMA.values()){
+                    for(ColumnBean col : tbl.getColumns().values()){
+                        col.setConfirmed(true);
+                    }
+                }
+            }
             return EXTRACTED_SCHEMA;
         }
         
@@ -163,7 +170,7 @@ public class SchemaGen {
             for (PlainSelect ps : plainSelects) {
                 SelectUnionParser child_su_parser = new SelectUnionParser(ps.toString());
                 ps.accept(child_su_parser);
-                updateExtractedSchema(child_su_parser.getExtractedSchema());
+                updateExtractedSchema(child_su_parser.extractSchema());
             }
 
         }
@@ -180,7 +187,7 @@ public class SchemaGen {
         public void visit(SubSelect _ss) {
             SelectUnionParser child_su_parser = new SelectUnionParser(_ss.toString());
             _ss.getSelectBody().accept(child_su_parser);
-            updateExtractedSchema(child_su_parser.getExtractedSchema());
+            updateExtractedSchema(child_su_parser.extractSchema());
         }
 
         @Override
