@@ -14,7 +14,8 @@ import java.util.Objects;
 public class ColumnBean {
  
     private String col_name;
-    private boolean confirmed;
+    private String table_name = null;
+    private boolean confirmed = false;
 
     public ColumnBean(String _col_name) {
         this.col_name = _col_name.toLowerCase();
@@ -55,7 +56,13 @@ public class ColumnBean {
         }
         return true;
     }
-    
-    
+
+	public String getTable_name() {
+		return table_name;
+	}
+
+	public void setTable_name(String table_name) {
+		this.table_name = table_name;
+	}
     
 }

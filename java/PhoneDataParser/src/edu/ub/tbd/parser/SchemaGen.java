@@ -12,7 +12,10 @@ import edu.ub.tbd.exceptions.IncompleteLogicError;
 import edu.ub.tbd.util.ParserUtil;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 
 import net.sf.jsqlparser.parser.ParseException;
@@ -215,9 +218,31 @@ public class SchemaGen {
             }
             
             //Parse whereclauses
-            int totalWhereClauses = 0;
             if (_ps.getWhere() != null) {
-                totalWhereClauses = ParserUtil.getAndClauses(_ps.getWhere()).size();
+            	Expression expression = _ps.getWhere();
+            	ExpressionVisitorImpl exprVisitorImpl = new ExpressionVisitorImpl();
+            	expression.accept(exprVisitorImpl);
+            	
+            	List<ColumnBean> extractedColumns = exprVisitorImpl.getColumns();
+            	Iterator<ColumnBean> iterator = extractedColumns.iterator();
+            	
+            	while(iterator.hasNext()) {
+            		ColumnBean colBean = iterator.next();
+            		Iterator<Entry<String, TableBean>> schemaIterator = EXTRACTED_SCHEMA.entrySet().iterator();
+            		while(schemaIterator.hasNext()) {
+            			Entry<String, TableBean> next = schemaIterator.next();
+            			TableBean tableBean = next.getValue();
+            			
+            			if(colBean.getTable_name() == null) {
+            				tableBean.addColumn(colBean);
+            			} else if(colBean.getTable_name().equals(next.getKey()) || colBean.getTable_name().equals(next.getValue().getTbl_alias())) {
+            				// Checking for table Name or Table Alias
+            				colBean.setConfirmed(true);
+            				tableBean.addColumn(colBean);
+            				break;
+            			}
+            		}
+            	}
             }
 
             //Parse Projections
