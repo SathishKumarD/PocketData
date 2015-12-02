@@ -1,6 +1,9 @@
 package edu.ub.tbd.parser;
 
 import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
@@ -9,18 +12,25 @@ import net.sf.jsqlparser.statement.Statement;
 import org.junit.Test;
 
 import edu.ub.tbd.beans.LogData;
+import edu.ub.tbd.beans.TableBean;
 
 public class SchemaGenTest {
 	
 	@Test
     public void testGenerate() throws Exception {
         
-        String sql = "SELECT * FROM sms, (call join call_2)";
+        String sql = "SELECT a,b,c FROM sms";
         //String sql = "SELECT thread_id FROM (SELECT _id, thread_id FROM pdu WHERE (msg_box=3))"; // PASS
         LogData ld = getDummyLogDataBean(sql);
         
         SchemaGen schemaGen = new SchemaGen(ld);
-        schemaGen.generate();
+        HashMap<String,TableBean> tableBean = schemaGen.generate();
+        Iterator<Entry<String, TableBean>> iterator = tableBean.entrySet().iterator();
+        while(iterator.hasNext()) {
+        	Entry<String, TableBean> next = iterator.next();
+        	TableBean bean = next.getValue();
+        	System.out.println(next.getKey() + " - " + next.getValue().getColumns());
+        }
     }
 	
 	private LogData getDummyLogDataBean(String _sql) throws ParseException{

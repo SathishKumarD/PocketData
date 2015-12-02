@@ -50,14 +50,19 @@ import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.AllColumns;
+import net.sf.jsqlparser.statement.select.AllTableColumns;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
+import net.sf.jsqlparser.statement.select.SelectItemVisitor;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
 /**
  *
  * @author san
  */
-public class ExpressionVisitorImpl implements ExpressionVisitor {
+public class ExpressionVisitorImpl implements ExpressionVisitor, SelectItemVisitor {
     
     private List<ColumnBean> columns = new ArrayList<>();
     private SelectUnionParser caller_su_parser;
@@ -68,6 +73,22 @@ public class ExpressionVisitorImpl implements ExpressionVisitor {
     
     public List<ColumnBean> getColumns() {
         return columns;
+    }
+    
+    @Override
+    public void visit(AllColumns _ac) {
+        //No need to implement in SchemaGen
+    }
+
+    @Override
+    public void visit(AllTableColumns _atc) {
+        //No need to implement in SchemaGen
+    }
+
+    @Override
+    public void visit(SelectExpressionItem _sei) {
+        Expression expression = _sei.getExpression();
+        expression.accept(this);
     }
     
     @Override

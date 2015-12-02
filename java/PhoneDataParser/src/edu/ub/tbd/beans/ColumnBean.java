@@ -76,5 +76,9 @@ public class ColumnBean {
             }
         }
     }
-
+    
+    @Override
+    public String toString() {
+    	return this.col_name + " - " + confirmed;
+    }
 }
