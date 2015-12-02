@@ -8,20 +8,26 @@ package edu.ub.tbd.parser;
 import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.constants.AppConstants;
 import edu.ub.tbd.entity.Analytics;
+import edu.ub.tbd.entity.ErrorLog;
+import edu.ub.tbd.entity.Unparsed_log_lines;
 import edu.ub.tbd.beans.TableBean;
+import edu.ub.tbd.service.PersistLogDataService;
 import edu.ub.tbd.service.PersistanceFileService;
 import edu.ub.tbd.service.PersistanceService;
 import edu.ub.tbd.util.MacFileNameFilter;
 import edu.ub.tbd.util.JavaObjectSerializerUtil;
 import edu.ub.tbd.util.KryoObjectSerializerUtil;
 import edu.ub.tbd.util.ObjectSerializerUtil;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,7 +41,9 @@ import java.util.concurrent.Executors;
 public class SchemaGen_Driver {
     private final PersistanceService ps_Analytics;
     private final ConcurrentLinkedQueue<ArrayList<LogData>> QUEUE= new ConcurrentLinkedQueue<>();
-    private final boolean IS_SERIAL_MODE = false;
+    private final boolean IS_SERIAL_MODE = true;
+    private final PersistanceService ps_errorLogService = new PersistanceFileService(AppConstants.ABS_DATA_FOLDER, 
+            AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, ErrorLog.class);
     
     //<app_id, <tbl_name, TableBean>>
     private final HashMap<Integer, HashMap<String, TableBean>> SCHEMAS = new HashMap<>();
@@ -184,11 +192,32 @@ public class SchemaGen_Driver {
         }
     }
     
-    private void parseEachLogData(LogData _ld) throws Exception{
-        SchemaGen schemaGen = new SchemaGen(_ld);
+    private void parseEachLogData(LogData _ld) {
+    	try {
+    		SchemaGen schemaGen = new SchemaGen(_ld);
+//            System.out.println("-------------------");
+//            System.out.println(_ld.getStmt());
 
-        HashMap<String, TableBean> extractedSchema = schemaGen.generate();
-        updateSCHEMAS(extractedSchema, _ld.getApp_id());
+            HashMap<String, TableBean> extractedSchema = schemaGen.generate();
+//            if(extractedSchema != null) {
+//            	Iterator<Entry<String, TableBean>> iterator = extractedSchema.entrySet().iterator();
+//                while(iterator.hasNext()) {
+//                	Entry<String, TableBean> next = iterator.next();
+//                	System.out.println(next.getKey() + " - " + next.getValue().getColumns());
+//                }
+//            } else {
+//            	System.out.println("{}");
+//            }
+            
+            updateSCHEMAS(extractedSchema, _ld.getApp_id());
+    	} catch(Exception ex) {
+    		try {
+				ps_errorLogService.write(new ErrorLog(_ld.getApp_id(), _ld.getUser_id(), _ld.getSql()));
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
     }
     
     private void updateSCHEMAS(final HashMap<String, TableBean> _extractedSchema, 
@@ -207,9 +236,11 @@ public class SchemaGen_Driver {
     private void updateSCHEMAS(final HashMap<String, TableBean> _baseSchemaOfApp, 
             final HashMap<String, TableBean> _extractedSchema)
     {
-        for(TableBean tbl : _extractedSchema.values()){
-            updateSCHEMAS(_baseSchemaOfApp, tbl);
-        }
+    	if(_extractedSchema != null) {
+    		for(TableBean tbl : _extractedSchema.values()){
+                updateSCHEMAS(_baseSchemaOfApp, tbl);
+            }
+    	}
     }
     
     private void updateSCHEMAS(final HashMap<String, TableBean> _baseSchemaOfApp, 
@@ -235,6 +266,11 @@ public class SchemaGen_Driver {
     
     public void shutDown(){
         //TODO: <Sankar> write if any shutdown Logic here
+    	try {
+			ps_errorLogService.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
     }
     
 }

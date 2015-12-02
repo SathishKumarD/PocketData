@@ -294,7 +294,7 @@ public class ExpressionVisitorImpl implements ExpressionVisitor, SelectItemVisit
     
     @Override
     public void visit(ExistsExpression ee) {
-        throw new UnsupportedOperationException("ExistsExpression in SQL Not supported yet.");
+    	ee.getRightExpression().accept(this);
     }
     
     @Override
