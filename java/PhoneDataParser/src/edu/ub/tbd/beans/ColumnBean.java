@@ -41,7 +41,7 @@ public class ColumnBean {
 
     public StringBuilder getXML(){
         StringBuilder out = new StringBuilder();
-        out.append("<column name='"+ col_name +"' confirmed='"+ confirmed +"' />");
+        out.append("<column name='"+ col_name +"' confirmed='"+ confirmed +"' />").append("\n");
         return out;
     }
     

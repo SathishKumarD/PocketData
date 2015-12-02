@@ -56,11 +56,11 @@ public class TableBean {
     
     public StringBuilder getXML(){
         StringBuilder out = new StringBuilder();
-        out.append("\t").append("<table name='"+ tbl_name +"' >");
+        out.append("\t").append("<table name='"+ tbl_name +"' >").append("\n");
         for(ColumnBean col : columns.values()){
             out.append("\t").append(col.getXML());
         }
-        out.append("\t").append("</table>");
+        out.append("\t").append("</table>").append("\n");
         return out;
     }
     
