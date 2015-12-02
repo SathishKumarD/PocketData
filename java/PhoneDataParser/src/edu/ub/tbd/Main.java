@@ -8,6 +8,7 @@ package edu.ub.tbd;
 import edu.ub.tbd.constants.AppConstants;
 import edu.ub.tbd.parser.AnalyticsGen_Driver;
 import edu.ub.tbd.parser.LogParser;
+import edu.ub.tbd.parser.SchemaGen_Driver;
 
 import java.io.File;
 import java.util.logging.Level;
@@ -46,26 +47,43 @@ public class Main {
                     }
                 }
             } else if(AppConstants.MODE_ANALYTICS_GEN) {
-                System.out.println("Running PhoneDataParser in \"DATA_GEN\" mode");
+                System.out.println("Running PhoneDataParser in \"ANALYTICS_GEN\" mode");
                 AppConstants.SRC_DIR = AppConstants.ABS_OBJECTS_FOLDER;
-                AnalyticsGen_Driver dataGen = null;
+                AnalyticsGen_Driver analyticsGenDriver = null;
                 try {
-                    dataGen = new AnalyticsGen_Driver();
-                    dataGen.run();
+                    analyticsGenDriver = new AnalyticsGen_Driver();
+                    analyticsGenDriver.run();
                 } catch (Exception ex) {
                     System.out.println("Data generation incomplete");
                     ex.printStackTrace();
                 } finally {
                     try {
-                        shutDown(dataGen);
+                        shutDown(analyticsGenDriver);
                     } catch (Exception e) {
-                        System.out.println("Unable to shutdown DataGen");
+                        System.out.println("Unable to shutdown DataGenDriver");
                         e.printStackTrace();
                     }
                 }
                 
             } else {
+                System.out.println("Running PhoneDataParser in \"SCHEMA_GEN\" mode");
+                AppConstants.SRC_DIR = AppConstants.ABS_OBJECTS_FOLDER;
+                SchemaGen_Driver schemaGenDriver = null;
                 
+                try {
+                    schemaGenDriver = new SchemaGen_Driver();
+                    schemaGenDriver.run();
+                } catch (Exception ex) {
+                    System.out.println("Schema generation incomplete");
+                    ex.printStackTrace();
+                } finally {
+                    try {
+                        shutDown(schemaGenDriver);
+                    } catch (Exception e) {
+                        System.out.println("Unable to shutdown SchemaGenDriver");
+                        e.printStackTrace();
+                    }
+                }
             }
         } else {
             System.out.println("Start up of the application failed");
@@ -163,6 +181,12 @@ public class Main {
     public static void shutDown(AnalyticsGen_Driver _dataGen) throws Exception{
         if(_dataGen != null){
             _dataGen.shutDown();
+        }
+    }
+    
+    public static void shutDown(SchemaGen_Driver _schemaGenDriver) throws Exception{
+        if(_schemaGenDriver != null){
+            _schemaGenDriver.shutDown();
         }
     }
     
