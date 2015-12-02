@@ -6,6 +6,7 @@
 package edu.ub.tbd.parser;
 
 
+import edu.ub.tbd.beans.ColumnBean;
 import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.entity.Analytics;
 import edu.ub.tbd.exceptions.IncompleteLogicError;
@@ -38,6 +39,7 @@ import edu.ub.tbd.constants.AppConstants;
 import edu.ub.tbd.beans.TableBean;
 
 import java.util.HashMap;
+import net.sf.jsqlparser.expression.Expression;
 
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
@@ -220,7 +222,7 @@ public class SchemaGen {
             //Parse whereclauses
             if (_ps.getWhere() != null) {
             	Expression expression = _ps.getWhere();
-            	ExpressionVisitorImpl exprVisitorImpl = new ExpressionVisitorImpl();
+            	ExpressionVisitorImpl exprVisitorImpl = new ExpressionVisitorImpl(this);
             	expression.accept(exprVisitorImpl);
             	
             	List<ColumnBean> extractedColumns = exprVisitorImpl.getColumns();

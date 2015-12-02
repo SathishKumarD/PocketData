@@ -6,19 +6,21 @@
 package edu.ub.tbd.beans;
 
 import java.util.Objects;
+import net.sf.jsqlparser.schema.Table;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author san
  */
 public class ColumnBean {
- 
+
     private String col_name;
     private String table_name = null;
     private boolean confirmed = false;
 
     public ColumnBean(String _col_name) {
-        this.col_name = _col_name.toLowerCase();
+        this.col_name = StringUtils.lowerCase(_col_name);
     }
 
     public String getCol_name() {
@@ -57,12 +59,22 @@ public class ColumnBean {
         return true;
     }
 
-	public String getTable_name() {
-		return table_name;
-	}
+    public String getTable_name() {
+        return table_name;
+    }
 
-	public void setTable_name(String table_name) {
-		this.table_name = table_name;
-	}
-    
+    public void setTable_name(String _table_name) {
+        this.table_name = StringUtils.lowerCase(_table_name);
+    }
+
+    public void setTable_name(Table _table) {
+        if (_table != null) {
+            if (_table.getAlias() != null && !_table.getAlias().isEmpty()) {
+                this.table_name = _table.getAlias();
+            } else {
+                this.table_name = _table.getName();
+            }
+        }
+    }
+
 }
