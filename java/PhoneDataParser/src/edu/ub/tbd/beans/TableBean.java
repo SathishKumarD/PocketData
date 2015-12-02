@@ -97,8 +97,4 @@ public class TableBean {
         return schemaName;
     }
 
-    
-
-    
-    
 }
