@@ -42,11 +42,12 @@ import java.util.logging.Logger;
  */
 public class SchemaGen_Driver {
 
-    private final PersistanceService ps_Analytics;
     private final ConcurrentLinkedQueue<ArrayList<LogData>> QUEUE = new ConcurrentLinkedQueue<>();
     private final boolean IS_SERIAL_MODE = true;
+    /*
     private final PersistanceService ps_errorLogService = new PersistanceFileService(AppConstants.ABS_DATA_FOLDER,
             AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, ErrorLog.class);
+    */
 
     //<app_id, <tbl_name, TableBean>>
     private final HashMap<Integer, HashMap<String, TableBean>> SCHEMAS = new HashMap<>();
@@ -55,9 +56,7 @@ public class SchemaGen_Driver {
     private volatile int THREAD_EXIT_COUNTER = READER_THREAD_COUNT;
     private final ExecutorService TASK_EXECUTOR = Executors.newFixedThreadPool(READER_THREAD_COUNT + 1); //This one additinal thread is Writer thread
 
-    public SchemaGen_Driver() throws Exception {
-        this.ps_Analytics = new PersistanceFileService(AppConstants.ABS_DATA_FOLDER,
-                AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, Analytics.class);
+    public SchemaGen_Driver(){
     }
 
     public void run() throws Exception {
@@ -214,12 +213,14 @@ public class SchemaGen_Driver {
 
             updateSCHEMAS(extractedSchema, _ld.getApp_id());
         } catch (Exception ex) {
+            /*
             try {
                 ps_errorLogService.write(new ErrorLog(_ld.getApp_id(), _ld.getUser_id(), _ld.getSql()));
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
+            */
         }
     }
 
@@ -296,11 +297,13 @@ public class SchemaGen_Driver {
     
     public void shutDown() {
         //TODO: <Sankar> write if any shutdown Logic here
+        /*
         try {
             ps_errorLogService.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
+        */
         try {
             writeSchemaXML();
         } catch (IOException ex) {

@@ -28,9 +28,11 @@ import net.sf.jsqlparser.statement.select.SelectVisitor;
 import net.sf.jsqlparser.statement.select.Union;
 import net.sf.jsqlparser.statement.update.Update;
 import edu.ub.tbd.beans.TableBean;
+import java.util.ArrayList;
 
 import java.util.HashMap;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.schema.Column;
 
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.FromItemVisitor;
@@ -55,7 +57,8 @@ public class SchemaGen {
         if (stmt != null) {
             if (stmt instanceof Select) {
                 Select select = (Select) stmt;
-                SelectUnionParser su_parser = new SelectUnionParser(stmt.toString());
+                //SelectUnionParser su_parser = new SelectUnionParser(stmt.toString());
+                SelectUnionParser su_parser = new SelectUnionParser();
                 select.getSelectBody().accept(su_parser);
                 extractedSchemaFromSQL = su_parser.extractSchema();
             } else if (stmt instanceof Delete) {
@@ -64,6 +67,10 @@ public class SchemaGen {
                 //TODO: <Sankar> Implement this
             } else if (stmt instanceof Insert) {
                 //TODO: <Sankar> Implement this
+                Insert insert = (Insert) stmt;
+                SchemaParser insert_parser = new InsertParser(insert);
+                insert_parser.init();
+                extractedSchemaFromSQL = insert_parser.extractSchema();
             } else {
                 throw new IncompleteLogicError("Handle other statement types");
             }
@@ -73,16 +80,103 @@ public class SchemaGen {
 
         return extractedSchemaFromSQL;
     }
-
-    class SelectUnionParser implements SelectVisitor, FromItemVisitor {
-
-        private final HashMap<String, TableBean> EXTRACTED_SCHEMA = new HashMap<>();
+    
+    abstract class SchemaParser {
+        protected final HashMap<String, TableBean> EXTRACTED_SCHEMA = new HashMap<>();
         private String curr_sql; //Remove this after debugging and code is finalized.
-
-        public SelectUnionParser(String _curr_sql) {
+        
+        public SchemaParser(String _curr_sql) {
             this.curr_sql = _curr_sql;
         }
+        
+        public SchemaParser() {
+        }
+        
+        abstract public void init();
+        
+        public HashMap<String, TableBean> extractSchema() {
+            return EXTRACTED_SCHEMA;
+        }
+        
+        protected void updateExtractedSchema(final HashMap<String, TableBean> _extractedSchema) {
+            for(TableBean tbl : _extractedSchema.values()){
+                updateExtractedSchema(tbl);
+            }
+        }
 
+        protected void updateExtractedSchema(final TableBean _extractedTbl) {
+            TableBean baseTbl = EXTRACTED_SCHEMA.get(_extractedTbl.getTbl_name());
+            if (baseTbl != null) {
+                baseTbl.addAllColumns(_extractedTbl.getColumns().values());
+            } else {
+                EXTRACTED_SCHEMA.put(_extractedTbl.getTbl_name(), _extractedTbl);
+            }
+        }
+        
+        protected void mergeColumnsToExtractedSchema(List<ColumnBean> extractedColumns) {
+        	Iterator<ColumnBean> iterator = extractedColumns.iterator();
+        	
+        	while(iterator.hasNext()) {
+        		ColumnBean colBean = iterator.next();
+        		Iterator<Entry<String, TableBean>> schemaIterator = EXTRACTED_SCHEMA.entrySet().iterator();
+        		while(schemaIterator.hasNext()) {
+        			Entry<String, TableBean> next = schemaIterator.next();
+        			TableBean tableBean = next.getValue();
+        			
+        			if(colBean.getTable_name() == null) {
+        				tableBean.addColumn(colBean);
+        			} else if(colBean.getTable_name().equals(next.getKey()) || colBean.getTable_name().equals(next.getValue().getTbl_alias())) {
+        				// Checking for table Name or Table Alias
+        				colBean.setConfirmed(true);
+        				tableBean.addColumn(colBean);
+        				break;
+        			}
+        		}
+        	}
+        }
+    }
+
+    class InsertParser extends SchemaParser{
+        
+        private final Insert stmt;
+        
+        public InsertParser(Insert _stmt){
+            super();
+            this.stmt = (Insert) _stmt;
+        }
+        
+        public void init(){
+            String tblName = stmt.getTable().getName();
+            
+            List<ColumnBean> columnBeans = new ArrayList<>(stmt.getColumns().size());
+            for(Column _column: stmt.getColumns()){
+                ColumnBean columnBean = new ColumnBean(_column.getColumnName());
+                columnBean.setTable_name(tblName);
+                columnBean.setConfirmed(true);
+                columnBeans.add(columnBean);
+            }
+            
+            TableBean tableBean = new TableBean(tblName);
+            tableBean.addAllColumns(columnBeans);
+            
+            updateExtractedSchema(tableBean);
+        }
+    }
+    
+    class SelectUnionParser extends SchemaParser implements SelectVisitor, FromItemVisitor {
+
+        public SelectUnionParser(String _curr_sql) {
+            super(_curr_sql);
+        }
+
+        public SelectUnionParser() {
+        }
+
+        public void init(){
+            //No need to init anything
+        }
+        
+        @Override
         public HashMap<String, TableBean> extractSchema() {
             if(EXTRACTED_SCHEMA.size() == 1){
                 for(TableBean tbl : EXTRACTED_SCHEMA.values()){
@@ -94,21 +188,6 @@ public class SchemaGen {
             return EXTRACTED_SCHEMA;
         }
         
-        private void updateExtractedSchema(final HashMap<String, TableBean> _extractedSchema) {
-            for(TableBean tbl : _extractedSchema.values()){
-                updateExtractedSchema(tbl);
-            }
-        }
-
-        private void updateExtractedSchema(final TableBean _extractedTbl) {
-            TableBean baseTbl = EXTRACTED_SCHEMA.get(_extractedTbl.getTbl_name());
-            if (baseTbl != null) {
-                baseTbl.addAllColumns(_extractedTbl.getColumns().values());
-            } else {
-                EXTRACTED_SCHEMA.put(_extractedTbl.getTbl_name(), _extractedTbl);
-            }
-        }
-
         @Override
         public void visit(PlainSelect _ps) {
             //Parse From statements
@@ -140,28 +219,6 @@ public class SchemaGen {
                 selectItem.accept(exprVisitorImpl);
                 mergeColumnsToExtractedSchema(exprVisitorImpl.getColumns());
             }
-        }
-        
-        public void mergeColumnsToExtractedSchema(List<ColumnBean> extractedColumns) {
-        	Iterator<ColumnBean> iterator = extractedColumns.iterator();
-        	
-        	while(iterator.hasNext()) {
-        		ColumnBean colBean = iterator.next();
-        		Iterator<Entry<String, TableBean>> schemaIterator = EXTRACTED_SCHEMA.entrySet().iterator();
-        		while(schemaIterator.hasNext()) {
-        			Entry<String, TableBean> next = schemaIterator.next();
-        			TableBean tableBean = next.getValue();
-        			
-        			if(colBean.getTable_name() == null) {
-        				tableBean.addColumn(colBean);
-        			} else if(colBean.getTable_name().equals(next.getKey()) || colBean.getTable_name().equals(next.getValue().getTbl_alias())) {
-        				// Checking for table Name or Table Alias
-        				colBean.setConfirmed(true);
-        				tableBean.addColumn(colBean);
-        				break;
-        			}
-        		}
-        	}
         }
 
         @Override
