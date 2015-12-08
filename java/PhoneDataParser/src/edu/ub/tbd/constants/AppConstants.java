@@ -27,6 +27,11 @@ public class AppConstants {
     public static boolean MODE_ANALYTICS_GEN;
     public static boolean MODE_SCHEMA_GEN;
     
+    public static boolean OBJECTS_GEN_FILTER_FULL;
+    public static boolean OBJECTS_GEN_FILTER_FORSCHEMAGEN;
+    public static String OBJECTS_GEN_FILTER_FULL_FILENAME = ".FULL";
+    public static String OBJECTS_GEN_FILTER_FORSCHEMAGEN_FILENAME = ".SCHEMAGEN";
+    
     public final static String SRC_LOG_FILE_EXT = ".gz";
     public final static String SRC_LOG_FILE_VALUE_SEPERATOR = "\t";
     

@@ -11,8 +11,7 @@ import edu.ub.tbd.parser.LogParser;
 import edu.ub.tbd.parser.SchemaGen_Driver;
 
 import java.io.File;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.IOException;
 
 /**
  * This is the driver class of the Phone Data Parser when invoked using jar or command line
@@ -119,6 +118,19 @@ public class Main {
                     AppConstants.MODE_SCHEMA_GEN = true;
                 }
             }
+            if(_args[i].equals("--objects") || _args[i].equals("-o")){
+                String object_gen_type = _args[++i];
+                if(object_gen_type.equalsIgnoreCase("full") || object_gen_type.equalsIgnoreCase("f")){
+                    AppConstants.OBJECTS_GEN_FILTER_FULL = true;
+                    AppConstants.OBJECTS_GEN_FILTER_FORSCHEMAGEN = false;
+                } else if(object_gen_type.equalsIgnoreCase("schemagen") || object_gen_type.equalsIgnoreCase("s")){
+                    AppConstants.OBJECTS_GEN_FILTER_FULL = false;
+                    AppConstants.OBJECTS_GEN_FILTER_FORSCHEMAGEN = true;
+                } else {
+                    AppConstants.OBJECTS_GEN_FILTER_FULL = true;
+                    AppConstants.OBJECTS_GEN_FILTER_FORSCHEMAGEN = false;
+                }
+            }
         }
     }
     
@@ -153,6 +165,18 @@ public class Main {
                     return out;
                 }
             }
+            
+            try {
+                if(AppConstants.OBJECTS_GEN_FILTER_FORSCHEMAGEN){
+                    new File(AppConstants.DEST_FOLDER + File.separatorChar + AppConstants.OBJECTS_FOLDER + File.separatorChar + AppConstants.OBJECTS_GEN_FILTER_FORSCHEMAGEN_FILENAME).createNewFile();
+                } else if(AppConstants.OBJECTS_GEN_FILTER_FORSCHEMAGEN){
+                    new File(AppConstants.DEST_FOLDER + File.separatorChar + AppConstants.OBJECTS_FOLDER + File.separatorChar + AppConstants.OBJECTS_GEN_FILTER_FULL_FILENAME).createNewFile();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+            
         }
         
         if(AppConstants.MODE_ANALYTICS_GEN || AppConstants.MODE_SCHEMA_GEN){
@@ -168,6 +192,14 @@ public class Main {
                 }
             }
         }
+        
+        if(AppConstants.MODE_ANALYTICS_GEN){
+            if(!new File(AppConstants.DEST_FOLDER + File.separatorChar + AppConstants.OBJECTS_FOLDER + File.separatorChar + AppConstants.OBJECTS_GEN_FILTER_FULL_FILENAME).exists()){
+                System.out.println("OBJECTS folder does not contain full/all OBJECTS, failing ANALYTICS Generation");
+                return false;
+            }
+        }
+            
         
         return true;
     }

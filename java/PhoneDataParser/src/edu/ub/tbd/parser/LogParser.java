@@ -17,6 +17,7 @@ import edu.ub.tbd.service.PersistanceFileService;
 import edu.ub.tbd.service.PersistanceService;
 import edu.ub.tbd.util.MacFileNameFilter;
 import edu.ub.tbd.util.SQLCleanUp;
+import edu.ub.tbd.util.StringUtil;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -79,6 +80,8 @@ public class LogParser {
         
         this.ps_UnParsedSQLs = new PersistanceFileService(AppConstants.DEST_FOLDER, 
                 AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, UnParsedSQLs.class);
+        
+        appsMap.put("", new App("")); //Any SQL for which no app is found will be put into this
     }
 
     public void parseLogsAndWriteFile() throws Exception{
@@ -177,6 +180,15 @@ public class LogParser {
                                 //This is a valid SQL log entry carrying line which needs to be parsed to create LogData Object
                                 
                                 raw_sql = (String) JSON_Obj.get("Results");
+                                String raw_sql_hash = StringUtil.getSHAHash(raw_sql);
+                                
+                                String appName = ""; appName = lookUpAppName(logLineBean); appName = (appName != null) ? appName : "";
+                                App app = appsMap.get(appName);
+                                if(AppConstants.MODE_OBJECT_GEN && AppConstants.OBJECTS_GEN_FILTER_FORSCHEMAGEN){
+                                    if(app == null || !app.addSQLHash(raw_sql_hash)){
+                                        continue; //Skip all the below process and read the next line. Similar SQL was already parsed for this app
+                                    }
+                                }
                                 String arguments = (JSON_Obj.get("Arguments(hashCoded)") != null) 
                                                         ? (String) JSON_Obj.get("Arguments(hashCoded)") 
                                                         : (String) JSON_Obj.get("Arguments");
@@ -243,9 +255,8 @@ public class LogParser {
         
         out.setUser_id(_user_id);
         
-        String key = _logLineBean.get_app_key();
         String appName = "";
-        if ((appName = this.appNameLookUpMap.get(key)) != null) {
+        if ((appName = lookUpAppName(_logLineBean)) != null) {
             // I have an app name
             out.setApp_id(appsMap.get(appName).getApp_id());
         }
@@ -255,6 +266,11 @@ public class LogParser {
         out.setStmt(_stmt);
         
         return out;
+    }
+    
+    private String lookUpAppName(LogLineBean _logLineBean){
+        String key = _logLineBean.get_app_key();
+        return this.appNameLookUpMap.get(key);
     }
     
     /**
@@ -345,11 +361,21 @@ public class LogParser {
         ps.close();
     }
     
+    private void printUniqueSQLCount(){
+        StringBuilder out = new StringBuilder();
+        for(App app : appsMap.values()){
+            out.append(app.getApp_id()).append("\t|\t").append(app.getApp_name()).append("\t|\t\t\t\t\t\t\t\t").append(app.getUniqueSQLHashCount()).append("\n");
+        }
+        
+        System.out.println(out);
+    }
+    
     public void shutDown() throws Exception{
         persistCacheData();
         ps_UnparsedLogLines.close();
         ps_LogDataService.close();
         ps_UnParsedSQLs.close();
+        //printUniqueSQLCount();
     }
     
     /*

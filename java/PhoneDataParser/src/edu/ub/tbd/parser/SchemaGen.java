@@ -66,7 +66,6 @@ public class SchemaGen {
             } else if (stmt instanceof Update) {
                 //TODO: <Sankar> Implement this
             } else if (stmt instanceof Insert) {
-                //TODO: <Sankar> Implement this
                 Insert insert = (Insert) stmt;
                 SchemaParser insert_parser = new InsertParser(insert);
                 insert_parser.init();

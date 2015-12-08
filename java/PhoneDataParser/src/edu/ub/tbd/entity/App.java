@@ -5,6 +5,9 @@
  */
 package edu.ub.tbd.entity;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  *
  * @author san
@@ -18,15 +21,30 @@ public class App extends AbstractEntity implements Comparable<App>{
     
     @Column public int app_id;
     @Column public String app_name;
+    public Set<String> uniqueSQLHash = new HashSet<>();
 
     public App(String _app_name) {
-        this.app_id = ++curr_PK_ID;
+        this.app_id = curr_PK_ID++;
         this.app_name = _app_name;
     }
 
     @Override
     public int hashCode() {
         return this.app_name.hashCode();
+    }
+    
+    /**
+     * 
+     * @param _newHash
+     * @return  true if new hash is not already present
+     *          false if new hash is already present
+     */
+    public boolean addSQLHash(String _newHash){
+        return uniqueSQLHash.add(_newHash);
+    }
+    
+    public int getUniqueSQLHashCount(){
+        return uniqueSQLHash.size();
     }
 
     @Override
