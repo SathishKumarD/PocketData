@@ -1,0 +1,52 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package edu.ub.tbd.constraint;
+
+import java.util.HashMap;
+
+/**
+ *
+ * @author san
+ */
+public class ColumnSetConstraintSolver_Driver implements ConstraintSolver_Driver{
+    
+    private static ColumnSetConstraintSolver_Driver instance;
+    //There is one ConstraintSolver instance created for each App
+    private HashMap<Integer, ConstraintSolver> SOLVERS_COLL = new HashMap<>();
+    
+    private ColumnSetConstraintSolver_Driver(){
+        
+    }
+    
+    public static ColumnSetConstraintSolver_Driver getInstance(){
+        if(instance == null){
+            instance = new ColumnSetConstraintSolver_Driver();
+        }
+        
+        return instance;
+    }
+    
+    //This is the method through which the SOLVERS_COLL should be accessed.
+    //Direct access of the SOLVERS_COLL should be avoided.
+    private ConstraintSolver getSolver(int _app_id){
+        ConstraintSolver solver = SOLVERS_COLL.get(_app_id);
+        if(solver == null){
+            solver = new ColumnSetConstraintSolver(_app_id);
+            SOLVERS_COLL.put(_app_id, solver);
+        }
+        
+        return solver;
+    }
+
+    @Override
+    public void solve() {
+        for(ConstraintSolver solver : SOLVERS_COLL.values()){
+            System.out.println("Solving for App : " + solver.getApp_id());
+            solver.solve();
+        }
+    }
+    
+}
