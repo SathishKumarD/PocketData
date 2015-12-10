@@ -49,7 +49,9 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.AllColumns;
@@ -66,6 +68,7 @@ public class ExpressionVisitorImpl implements ExpressionVisitor, SelectItemVisit
     
     private List<ColumnBean> columns = new ArrayList<>();
     private SelectUnionParser caller_su_parser;
+    private Set<String> exprAliasSet = new HashSet<>();
     
     public ExpressionVisitorImpl(SelectUnionParser _caller_su_parser) {
         this.caller_su_parser = _caller_su_parser;
@@ -75,7 +78,11 @@ public class ExpressionVisitorImpl implements ExpressionVisitor, SelectItemVisit
         return columns;
     }
     
-    @Override
+    public Set<String> getExprAliasSet() {
+		return exprAliasSet;
+	}
+
+	@Override
     public void visit(AllColumns _ac) {
         //No need to implement in SchemaGen
     }
@@ -88,6 +95,9 @@ public class ExpressionVisitorImpl implements ExpressionVisitor, SelectItemVisit
     @Override
     public void visit(SelectExpressionItem _sei) {
         Expression expression = _sei.getExpression();
+        if(_sei.getAlias() != null && !"".equals(_sei.getAlias())) {
+        	exprAliasSet.add(_sei.getAlias());
+        }
         expression.accept(this);
     }
     

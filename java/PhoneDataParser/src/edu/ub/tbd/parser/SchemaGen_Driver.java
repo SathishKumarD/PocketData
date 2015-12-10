@@ -7,15 +7,8 @@ package edu.ub.tbd.parser;
 
 import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.constants.AppConstants;
-import edu.ub.tbd.entity.Analytics;
-import edu.ub.tbd.entity.Unparsed_log_lines;
 import edu.ub.tbd.beans.TableBean;
-import edu.ub.tbd.entity.ErrorLog;
-import edu.ub.tbd.service.PersistLogDataService;
-import edu.ub.tbd.service.PersistanceFileService;
-import edu.ub.tbd.service.PersistanceService;
 import edu.ub.tbd.util.MacFileNameFilter;
-import edu.ub.tbd.util.JavaObjectSerializerUtil;
 import edu.ub.tbd.util.KryoObjectSerializerUtil;
 import edu.ub.tbd.util.ObjectSerializerUtil;
 
@@ -27,14 +20,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *

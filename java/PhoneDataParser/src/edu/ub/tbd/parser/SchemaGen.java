@@ -10,10 +10,14 @@ import edu.ub.tbd.beans.ColumnBean;
 import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.exceptions.IncompleteLogicError;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
+
+
+import java.util.Set;
 
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
@@ -28,12 +32,12 @@ import net.sf.jsqlparser.statement.select.SelectVisitor;
 import net.sf.jsqlparser.statement.select.Union;
 import net.sf.jsqlparser.statement.update.Update;
 import edu.ub.tbd.beans.TableBean;
-import java.util.ArrayList;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
-
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.FromItemVisitor;
 import net.sf.jsqlparser.statement.select.SubJoin;
@@ -82,6 +86,7 @@ public class SchemaGen {
     
     abstract class SchemaParser {
         protected final HashMap<String, TableBean> EXTRACTED_SCHEMA = new HashMap<>();
+        protected Set<String> EXTRACTED_ALIAS = new HashSet<>();
         private String curr_sql; //Remove this after debugging and code is finalized.
         
         public SchemaParser(String _curr_sql) {
@@ -91,13 +96,23 @@ public class SchemaGen {
         public SchemaParser() {
         }
         
+        public void addAllExtractedAlias(Set<String> alias) {
+        	EXTRACTED_ALIAS.addAll(alias);
+        }
+        
         abstract public void init();
         
         public HashMap<String, TableBean> extractSchema() {
             return EXTRACTED_SCHEMA;
         }
         
-        protected void updateExtractedSchema(final HashMap<String, TableBean> _extractedSchema) {
+        public Set<String> getExtractedAlias() {
+        	return EXTRACTED_ALIAS;
+        }
+        
+        protected void updateExtractedSchemaAndAlias(final SchemaParser parser) {
+        	HashMap<String,TableBean> _extractedSchema = parser.extractSchema();
+        	addAllExtractedAlias(parser.getExtractedAlias());
             for(TableBean tbl : _extractedSchema.values()){
                 updateExtractedSchema(tbl);
             }
@@ -117,19 +132,21 @@ public class SchemaGen {
         	
         	while(iterator.hasNext()) {
         		ColumnBean colBean = iterator.next();
-        		Iterator<Entry<String, TableBean>> schemaIterator = EXTRACTED_SCHEMA.entrySet().iterator();
-        		while(schemaIterator.hasNext()) {
-        			Entry<String, TableBean> next = schemaIterator.next();
-        			TableBean tableBean = next.getValue();
-        			
-        			if(colBean.getTable_name() == null) {
-        				tableBean.addColumn(colBean);
-        			} else if(colBean.getTable_name().equals(next.getKey()) || colBean.getTable_name().equals(next.getValue().getTbl_alias())) {
-        				// Checking for table Name or Table Alias
-        				colBean.setConfirmed(true);
-        				tableBean.addColumn(colBean);
-        				break;
-        			}
+        		if(!EXTRACTED_ALIAS.contains(colBean.getCol_name())) {
+        			Iterator<Entry<String, TableBean>> schemaIterator = EXTRACTED_SCHEMA.entrySet().iterator();
+            		while(schemaIterator.hasNext()) {
+            			Entry<String, TableBean> next = schemaIterator.next();
+            			TableBean tableBean = next.getValue();
+            			
+            			if(colBean.getTable_name() == null) {
+            				tableBean.addColumn(colBean);
+            			} else if(colBean.getTable_name().equals(next.getKey()) || colBean.getTable_name().equals(next.getValue().getTbl_alias())) {
+            				// Checking for table Name or Table Alias
+            				colBean.setConfirmed(true);
+            				tableBean.addColumn(colBean);
+            				break;
+            			}
+            		}
         		}
         	}
         }
@@ -208,6 +225,7 @@ public class SchemaGen {
             	ExpressionVisitorImpl exprVisitorImpl = new ExpressionVisitorImpl(this);
             	expression.accept(exprVisitorImpl);
             	
+            	addAllExtractedAlias(exprVisitorImpl.getExprAliasSet());
             	mergeColumnsToExtractedSchema(exprVisitorImpl.getColumns());
             }
 
@@ -216,6 +234,7 @@ public class SchemaGen {
             for (SelectItem selectItem : selectItems) {
                 ExpressionVisitorImpl exprVisitorImpl = new ExpressionVisitorImpl(this);
                 selectItem.accept(exprVisitorImpl);
+                addAllExtractedAlias(exprVisitorImpl.getExprAliasSet());
                 mergeColumnsToExtractedSchema(exprVisitorImpl.getColumns());
             }
         }
@@ -226,7 +245,7 @@ public class SchemaGen {
             for (PlainSelect ps : plainSelects) {
                 SelectUnionParser child_su_parser = new SelectUnionParser(ps.toString());
                 ps.accept(child_su_parser);
-                updateExtractedSchema(child_su_parser.extractSchema());
+                updateExtractedSchemaAndAlias(child_su_parser);
             }
 
         }
@@ -243,7 +262,7 @@ public class SchemaGen {
         public void visit(SubSelect _ss) {
             SelectUnionParser child_su_parser = new SelectUnionParser(_ss.toString());
             _ss.getSelectBody().accept(child_su_parser);
-            updateExtractedSchema(child_su_parser.extractSchema());
+            updateExtractedSchemaAndAlias(child_su_parser);
         }
 
         @Override

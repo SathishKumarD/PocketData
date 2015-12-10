@@ -19,7 +19,7 @@ public class SchemaGenTest {
 	@Test
     public void testGenerate() throws Exception {
         
-        String sql = "SELECT s.a,d.b,c FROM sms s join call d WHERE s.k > 5 and d.f > 10";
+        String sql = "SELECT a FROM (SELECT c as a from TBL_1)";
         //String sql = "SELECT thread_id FROM (SELECT _id, thread_id FROM pdu WHERE (msg_box=3))"; // PASS
         LogData ld = getDummyLogDataBean(sql);
         
