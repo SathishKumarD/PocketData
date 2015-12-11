@@ -62,4 +62,21 @@ public class ColumnSetConstraintSolver_Driver implements ConstraintSolver_Driver
         getSolver(_app_id).addConstraints(_constraints);
     }
 
+    @Override
+    public StringBuilder generateXML() {
+        StringBuilder out = new StringBuilder();
+        out.append("<schemas>").append("\n");
+        
+        for(ConstraintSolver solver : SOLVERS.values()){
+            if(solver.getApp_id() == -1){
+                continue;
+            }
+            out.append(solver.getXML());
+        }
+        
+        out.append("</schemas>").append("\n");
+        
+        return out;
+    }
+
 }

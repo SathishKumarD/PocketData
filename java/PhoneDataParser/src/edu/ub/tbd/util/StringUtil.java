@@ -39,14 +39,16 @@ public final class StringUtil {
     }
     
     public static void main(String[] args) {
-        String input1 = "SELECT pendingid FROM clients WHERE uri = ?";
+        String input1 = "SELECT _id FROM user WHERE class=?";
         System.out.println(StringUtil.getSHAHash(input1));
         
         String input2 = "SELECT pendingid FROM clients WHERE uri == ?";
         System.out.println(StringUtil.getSHAHash(input2));
         
+        /*
         for(int i = 1; i < 56000000; i++){
             StringUtil.getSHAHash(input2 + i);
         }
+        */
     }
 }

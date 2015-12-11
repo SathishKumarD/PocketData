@@ -17,4 +17,5 @@ public interface ConstraintSolver_Driver {
     public void solve();
     public void addKnowledgeData(int _app_id, List<TableBean> _knowledgeData);
     public void addConstraints(int _app_id, List<EitherConstraint> _constraints);
+    public StringBuilder generateXML();
 }

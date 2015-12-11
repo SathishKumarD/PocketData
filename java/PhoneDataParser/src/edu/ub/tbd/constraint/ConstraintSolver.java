@@ -14,6 +14,7 @@ import java.util.List;
  */
 interface ConstraintSolver {
     public void solve();
+    public StringBuilder getXML();
     public int getApp_id();
     public void addConstraint(EitherConstraint _constraint);
     public void addKnowledgeData(List<TableBean> _knowledgeData);

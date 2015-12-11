@@ -10,7 +10,10 @@ import edu.ub.tbd.beans.TableBean;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  *
@@ -103,5 +106,86 @@ class ColumnSetConstraintSolver implements ConstraintSolver{
                 addConstraint(constraint);
             }
         }
+    }
+
+    @Override
+    public StringBuilder getXML() {
+        updateKnowledgeDBWithFalseColumns();
+        
+        Collection<TableBean> tables = KNOWLEDGE_DB.values();
+        StringBuilder out = null;
+
+        if(tables != null && tables.size() > 0){
+            out = new StringBuilder();
+            out.append("\t").append("<app id='" + this.app_id + "'>").append("\n");
+            for (TableBean tbl : tables) {
+                out.append(tbl.getXML());
+            }
+            out.append("\t").append("</app>").append("\n");
+        }
+        return out;
+    }
+    
+    private void updateKnowledgeDBWithFalseColumns(){
+        HashMap<String, Set<String>> tableFalseColumns = getFalseColumns();
+        
+        if(tableFalseColumns != null && tableFalseColumns.size() > 0){
+            //After this the KNOWLEDGE_DB will have FALSE columns
+            Collection<TableBean> tables = KNOWLEDGE_DB.values();
+            if(tables != null){
+                for(TableBean KDB_tblBean : tables){
+                    Set<String> falseColumns = tableFalseColumns.get(KDB_tblBean.getTbl_name());
+                    if(falseColumns != null){
+                        for(String falseColumn : falseColumns){
+                            KDB_tblBean.addColumn(new ColumnBean(falseColumn));
+                        }
+                    }
+                    tableFalseColumns.remove(KDB_tblBean.getTbl_name());
+                }
+            }
+            
+            //The Remaining Tables in tableFalseColumns Map had no entry for them in original KDB
+            if(tableFalseColumns.size() > 0){
+                for(Entry<String, Set<String>> entry : tableFalseColumns.entrySet()){
+                    String tblName = entry.getKey();
+                    TableBean tblBean = new TableBean(tblName);
+                    Set<String> colNames = entry.getValue();
+                    if(colNames != null){
+                        for(String colName : colNames){
+                            tblBean.addColumn(new ColumnBean(colName));
+                        }
+                    }
+                    
+                    KNOWLEDGE_DB.put(tblName, tblBean);
+                }
+            }
+        }
+    }
+    
+    /**
+     * 
+     * @return HashMap<String, Set<String>> - Key is the Table Name, Value is Set of Column Names that are false
+     */
+    private HashMap<String, Set<String>> getFalseColumns(){
+        HashMap<String, Set<String>> out = new HashMap<>();
+        
+        Collection<EitherConstraint> constraints = CONSTRAINTS_DB.values();
+        if(constraints != null){
+            for(EitherConstraint constraint : constraints){
+                String [] tableNames = constraint.getTableNames();
+                if(tableNames != null){
+                    for(String tblName : tableNames){
+                        Set<String> columns = out.get(tblName);
+                        if(columns == null){
+                            columns = new HashSet<>();
+                            out.put(tblName, columns);
+                        }
+                        columns.add(constraint.getColumnName());
+                    }
+                }
+            }
+        }
+        
+        return out;
     }
 }

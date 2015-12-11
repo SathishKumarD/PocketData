@@ -284,11 +284,15 @@ public class SchemaGen_Driver {
         out.append("</schemas>").append("\n");
         return out;
     }
+    
+    public StringBuilder generateXML(ConstraintSolver_Driver _solverDriver) {
+        return _solverDriver.generateXML();
+    }
 
     private void writeSchemaXML() throws IOException {
         File schemaFile = new File(AppConstants.ABS_DATA_FOLDER + File.separatorChar + "SCHEMA.xml");
         FileWriter writer = new FileWriter(schemaFile);
-        writer.write(generateXML().toString());
+        writer.write(generateXML(CONSTRAINT_SOLVER).toString());
         writer.close();
     }
 
