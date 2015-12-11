@@ -21,7 +21,7 @@ public class SchemaGenTest {
 	@Test
     public void testGenerate() throws Exception {
         
-        String sql = "SELECT a FROM (SELECT c from TBL_1, TBL_2)";
+        String sql = "SELECT a FROM (SELECT c from TBL_1, TBL_2) sub, t3, t4";
         //String sql = "SELECT thread_id FROM (SELECT _id, thread_id FROM pdu WHERE (msg_box=3))"; // PASS
         LogData ld = getDummyLogDataBean(sql);
         

@@ -153,7 +153,6 @@ public class SchemaGen {
 
         protected void updateExtractedSchemaAndAlias(final SchemaParser parser) {
             HashMap<String, TableBean> _extractedSchema = parser.extractSchema();
-            parser.buildConstraints();
             CONSTRAINTS.addAll(parser.getConstraints());
             addAllExtractedAlias(parser.getExtractedAlias());
             for (TableBean tbl : _extractedSchema.values()) {
@@ -306,6 +305,7 @@ public class SchemaGen {
                 addAllExtractedAlias(exprVisitorImpl.getExprAliasSet());
                 mergeColumnsToExtractedSchema(exprVisitorImpl.getColumns());
             }
+            buildConstraints();
         }
 
         @Override
