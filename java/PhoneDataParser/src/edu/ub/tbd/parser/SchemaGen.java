@@ -10,9 +10,11 @@ import edu.ub.tbd.beans.ColumnBean;
 import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.exceptions.IncompleteLogicError;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 
@@ -32,9 +34,12 @@ import net.sf.jsqlparser.statement.select.SelectVisitor;
 import net.sf.jsqlparser.statement.select.Union;
 import net.sf.jsqlparser.statement.update.Update;
 import edu.ub.tbd.beans.TableBean;
+import edu.ub.tbd.constraint.EitherConstraint;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import com.sun.org.apache.regexp.internal.recompile;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
@@ -51,7 +56,9 @@ import net.sf.jsqlparser.statement.select.SubSelect;
 public class SchemaGen {
 
     private final Statement stmt;
-
+    private List<EitherConstraint> constraints = new ArrayList<>();
+    private List<TableBean> knowledgeData = new ArrayList<>();
+    
     public SchemaGen(LogData _ld) {
         this.stmt = _ld.getStmt();
     }
@@ -65,15 +72,19 @@ public class SchemaGen {
                 SelectUnionParser su_parser = new SelectUnionParser();
                 select.getSelectBody().accept(su_parser);
                 extractedSchemaFromSQL = su_parser.extractSchema();
-            } else if (stmt instanceof Delete) {
-                //TODO: <Sankar> Implement this
-            } else if (stmt instanceof Update) {
-                //TODO: <Sankar> Implement this
+                knowledgeData = su_parser.getKnowledgeData();
+                constraints = su_parser.getConstraints();
             } else if (stmt instanceof Insert) {
                 Insert insert = (Insert) stmt;
                 SchemaParser insert_parser = new InsertParser(insert);
                 insert_parser.init();
                 extractedSchemaFromSQL = insert_parser.extractSchema();
+                knowledgeData = insert_parser.getKnowledgeData();
+                constraints = insert_parser.getConstraints();
+            } else if (stmt instanceof Delete) {
+                //TODO: <Sankar> Implement this
+            } else if (stmt instanceof Update) {
+                //TODO: <Sankar> Implement this
             } else {
                 throw new IncompleteLogicError("Handle other statement types");
             }
@@ -84,9 +95,19 @@ public class SchemaGen {
         return extractedSchemaFromSQL;
     }
     
-    abstract class SchemaParser {
+    public List<EitherConstraint> getConstraints() {
+		return constraints;
+	}
+
+	public List<TableBean> getKnowledgeData() {
+		return knowledgeData;
+	}
+
+	abstract class SchemaParser {
         protected final HashMap<String, TableBean> EXTRACTED_SCHEMA = new HashMap<>();
         protected Set<String> EXTRACTED_ALIAS = new HashSet<>();
+        protected List<EitherConstraint> CONSTRAINTS = new ArrayList<>();
+        
         private String curr_sql; //Remove this after debugging and code is finalized.
         
         public SchemaParser(String _curr_sql) {
@@ -106,12 +127,40 @@ public class SchemaGen {
             return EXTRACTED_SCHEMA;
         }
         
+        public void buildConstraints() {
+        	
+        }
+        
+        public List<TableBean> getKnowledgeData() {
+        	if(EXTRACTED_SCHEMA != null) {
+        		List<TableBean> list = new ArrayList<>();
+        		for(TableBean bean : EXTRACTED_SCHEMA.values()) {
+        			if(bean.getColumns() != null) {
+        				TableBean newTBLBean = new TableBean(bean.getTbl_name());
+        				for(ColumnBean column : bean.getColumns().values()) {
+        					if(column.isConfirmed()) {
+        						newTBLBean.addColumn(column);
+        					}
+        				}
+        				list.add(newTBLBean);
+        			}
+        		}
+        		return list;
+        	}
+        	return null;
+        }
+        
+        public List<EitherConstraint> getConstraints() {
+        	return CONSTRAINTS;
+        }
+        
         public Set<String> getExtractedAlias() {
         	return EXTRACTED_ALIAS;
         }
         
         protected void updateExtractedSchemaAndAlias(final SchemaParser parser) {
         	HashMap<String,TableBean> _extractedSchema = parser.extractSchema();
+        	parser.buildConstraints();
         	addAllExtractedAlias(parser.getExtractedAlias());
             for(TableBean tbl : _extractedSchema.values()){
                 updateExtractedSchema(tbl);
@@ -202,6 +251,32 @@ public class SchemaGen {
                 }
             }
             return EXTRACTED_SCHEMA;
+        }
+        
+        @Override
+        public void buildConstraints() {
+        	HashMap<String,TableBean> extractSchema = extractSchema();
+        	if(extractSchema != null) {
+        		Map<String, List<String>> map = new HashMap<>();
+        		for(TableBean tblBean : extractSchema.values()) {
+        			if(tblBean.getColumns() != null) {
+        				for(ColumnBean bean : tblBean.getColumns().values()) {
+        					if(!bean.isConfirmed()) {
+        						List<String> list = map.get(bean.getCol_name());
+        						if(list != null) {
+        							list.add(tblBean.getTbl_name());
+        						} else {
+        							list = new ArrayList<>();
+        							list.add(tblBean.getTbl_name());
+        							map.put(bean.getCol_name(), list);
+        						}
+        					}
+        				}
+        			}
+            	}
+        		
+        		CONSTRAINTS = EitherConstraint.createEitherConstraints(map);
+        	}
         }
         
         @Override

@@ -5,6 +5,11 @@
  */
 package edu.ub.tbd.constraint;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 
 
 /**
@@ -23,7 +28,7 @@ public class EitherConstraint {
         this.columnName = _colName;
         this.tableNames = _tableNames;
     }
-
+    
     public int getId() {
         return id;
     }
@@ -72,6 +77,20 @@ public class EitherConstraint {
     public static void main(String[] args) {
         EitherConstraint c = new EitherConstraint("A", "T1", "T3", "T5");
         System.out.println(c);
+    }
+    
+    public static List<EitherConstraint> createEitherConstraints(Map<String, List<String>> constraints) {
+    	if(constraints != null) {
+    		List<EitherConstraint> constrainstList = new ArrayList<>();
+    		for(Map.Entry<String, List<String>> entry : constraints.entrySet()) {
+    			String key = entry.getKey();
+    			List<String> value = entry.getValue();
+    			EitherConstraint eitherConstraint = new EitherConstraint(key, (String[]) value.toArray());
+    			constrainstList.add(eitherConstraint);
+    		}
+    		return constrainstList;
+    	}
+    	return null;
     }
     
 }

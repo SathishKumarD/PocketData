@@ -23,7 +23,6 @@ public class TableBean {
     private Map<String, ColumnBean> columns = new HashMap<>();
 
     private TableBean(){
-        
     }
     
     public TableBean(String _tbl_name){

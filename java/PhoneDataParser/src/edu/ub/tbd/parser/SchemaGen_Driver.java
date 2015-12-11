@@ -7,6 +7,9 @@ package edu.ub.tbd.parser;
 
 import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.constants.AppConstants;
+import edu.ub.tbd.constraint.ColumnSetConstraintSolver_Driver;
+import edu.ub.tbd.constraint.ConstraintSolver_Driver;
+import edu.ub.tbd.constraint.EitherConstraint;
 import edu.ub.tbd.beans.TableBean;
 import edu.ub.tbd.util.MacFileNameFilter;
 import edu.ub.tbd.util.KryoObjectSerializerUtil;
@@ -46,6 +49,8 @@ public class SchemaGen_Driver {
     private volatile int THREAD_EXIT_COUNTER = READER_THREAD_COUNT;
     private final ExecutorService TASK_EXECUTOR = Executors.newFixedThreadPool(READER_THREAD_COUNT + 1); //This one additinal thread is Writer thread
 
+    private final ConstraintSolver_Driver CONSTRAINT_SOLVER = ColumnSetConstraintSolver_Driver.getInstance();
+    
     public SchemaGen_Driver(){
     }
 
@@ -201,6 +206,8 @@ public class SchemaGen_Driver {
 //            	System.out.println("{}");
 //            }
 
+            CONSTRAINT_SOLVER.addConstraints(_ld.getApp_id(), schemaGen.getConstraints());
+            CONSTRAINT_SOLVER.addKnowledgeData(_ld.getApp_id(), schemaGen.getKnowledgeData());
             updateSCHEMAS(extractedSchema, _ld.getApp_id());
         } catch (Exception ex) {
             /*
@@ -295,6 +302,7 @@ public class SchemaGen_Driver {
         }
         */
         try {
+        	CONSTRAINT_SOLVER.solve();
             writeSchemaXML();
         } catch (IOException ex) {
             ex.printStackTrace();

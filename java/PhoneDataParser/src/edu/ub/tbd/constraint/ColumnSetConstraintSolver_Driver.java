@@ -6,6 +6,9 @@
 package edu.ub.tbd.constraint;
 
 import java.util.HashMap;
+import java.util.List;
+
+import edu.ub.tbd.beans.TableBean;
 
 /**
  *
@@ -48,5 +51,17 @@ public class ColumnSetConstraintSolver_Driver implements ConstraintSolver_Driver
             solver.solve();
         }
     }
+
+	@Override
+	public void addKnowledgeData(int app_id, List<TableBean> knowledgeData) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void addConstraints(int app_id, List<EitherConstraint> constraints) {
+		// TODO Auto-generated method stub
+		
+	}
     
 }
