@@ -38,9 +38,9 @@ public class SchemaGen_Driver {
     private final ConcurrentLinkedQueue<ArrayList<LogData>> QUEUE = new ConcurrentLinkedQueue<>();
     private final boolean IS_SERIAL_MODE = true;
     /*
-    private final PersistanceService ps_errorLogService = new PersistanceFileService(AppConstants.ABS_DATA_FOLDER,
-            AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, ErrorLog.class);
-    */
+     private final PersistanceService ps_errorLogService = new PersistanceFileService(AppConstants.ABS_DATA_FOLDER,
+     AppConstants.OUTPUT_FILE_VALUE_SEPERATOR, ErrorLog.class);
+     */
 
     //<app_id, <tbl_name, TableBean>>
     private final HashMap<Integer, HashMap<String, TableBean>> SCHEMAS = new HashMap<>();
@@ -50,8 +50,8 @@ public class SchemaGen_Driver {
     private final ExecutorService TASK_EXECUTOR = Executors.newFixedThreadPool(READER_THREAD_COUNT + 1); //This one additinal thread is Writer thread
 
     private final ConstraintSolver_Driver CONSTRAINT_SOLVER = ColumnSetConstraintSolver_Driver.getInstance();
-    
-    public SchemaGen_Driver(){
+
+    public SchemaGen_Driver() {
     }
 
     public void run() throws Exception {
@@ -211,13 +211,13 @@ public class SchemaGen_Driver {
             updateSCHEMAS(extractedSchema, _ld.getApp_id());
         } catch (Exception ex) {
             /*
-            try {
-                ps_errorLogService.write(new ErrorLog(_ld.getApp_id(), _ld.getUser_id(), _ld.getSql()));
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            */
+             try {
+             ps_errorLogService.write(new ErrorLog(_ld.getApp_id(), _ld.getUser_id(), _ld.getSql()));
+             } catch (Exception e) {
+             // TODO Auto-generated catch block
+             e.printStackTrace();
+             }
+             */
         }
     }
 
@@ -285,24 +285,24 @@ public class SchemaGen_Driver {
         return out;
     }
 
-    private void writeSchemaXML() throws IOException{
+    private void writeSchemaXML() throws IOException {
         File schemaFile = new File(AppConstants.ABS_DATA_FOLDER + File.separatorChar + "SCHEMA.xml");
         FileWriter writer = new FileWriter(schemaFile);
         writer.write(generateXML().toString());
         writer.close();
     }
-    
+
     public void shutDown() {
         //TODO: <Sankar> write if any shutdown Logic here
         /*
+         try {
+         ps_errorLogService.close();
+         } catch (Exception e) {
+         e.printStackTrace();
+         }
+         */
         try {
-            ps_errorLogService.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        */
-        try {
-        	CONSTRAINT_SOLVER.solve();
+            CONSTRAINT_SOLVER.solve();
             writeSchemaXML();
         } catch (IOException ex) {
             ex.printStackTrace();

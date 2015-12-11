@@ -13,17 +13,20 @@ import org.junit.Test;
 
 import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.beans.TableBean;
+import edu.ub.tbd.constraint.EitherConstraint;
+import java.util.List;
 
 public class SchemaGenTest {
 	
 	@Test
     public void testGenerate() throws Exception {
         
-        String sql = "SELECT a FROM (SELECT c as a from TBL_1)";
+        String sql = "SELECT a FROM (SELECT c from TBL_1, TBL_2)";
         //String sql = "SELECT thread_id FROM (SELECT _id, thread_id FROM pdu WHERE (msg_box=3))"; // PASS
         LogData ld = getDummyLogDataBean(sql);
         
         SchemaGen schemaGen = new SchemaGen(ld);
+        List<EitherConstraint> contraints = schemaGen.getConstraints();
         HashMap<String,TableBean> tableBean = schemaGen.generate();
         Iterator<Entry<String, TableBean>> iterator = tableBean.entrySet().iterator();
         while(iterator.hasNext()) {

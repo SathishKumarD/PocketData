@@ -15,6 +15,6 @@ import edu.ub.tbd.beans.TableBean;
  */
 public interface ConstraintSolver_Driver {
     public void solve();
-    public void addKnowledgeData(int app_id, List<TableBean> knowledgeData);
-    public void addConstraints(int app_id, List<EitherConstraint> constraints);
+    public void addKnowledgeData(int _app_id, List<TableBean> _knowledgeData);
+    public void addConstraints(int _app_id, List<EitherConstraint> _constraints);
 }

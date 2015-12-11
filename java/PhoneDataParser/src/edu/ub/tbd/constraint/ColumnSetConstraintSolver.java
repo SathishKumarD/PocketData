@@ -5,9 +5,12 @@
  */
 package edu.ub.tbd.constraint;
 
+import edu.ub.tbd.beans.ColumnBean;
 import edu.ub.tbd.beans.TableBean;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  *
@@ -34,7 +37,25 @@ class ColumnSetConstraintSolver implements ConstraintSolver{
     
     @Override
     public void solve() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        System.out.println(app_id + " : # of Contraints before solve = " + CONSTRAINTS_DB.size());
+        for(TableBean tblBean : KNOWLEDGE_DB.values()){
+            String tblName = tblBean.getTbl_name();
+            Collection<ColumnBean> colBeans = tblBean.getColumns().values();
+            if(colBeans != null){
+                for(ColumnBean colBean : colBeans){
+                    String colName = colBean.getCol_name();
+                    String key = tblName + "." + colName;
+                    ArrayList<EitherConstraint> constraintsToRemove = INVERTED_INDEXES.get(key);
+                    if(constraintsToRemove != null){
+                        for(EitherConstraint contraint : constraintsToRemove){
+                            CONSTRAINTS_DB.remove(contraint.getId());
+                        }
+                    }
+
+                }
+            }
+        }
+        System.out.println(app_id + " : # of Contraints after solve = " + CONSTRAINTS_DB.size());
     }
 
     @Override
@@ -59,5 +80,28 @@ class ColumnSetConstraintSolver implements ConstraintSolver{
         }
         
         invertedIndex.add(_constraint);
+    }
+
+    @Override
+    public void addKnowledgeData(List<TableBean> _knowledgeData) {
+        if(_knowledgeData != null){
+            for(TableBean tblBean : _knowledgeData){
+                TableBean KDB_tblBean = KNOWLEDGE_DB.get(tblBean.getTbl_name());
+                if(KDB_tblBean == null){
+                    KNOWLEDGE_DB.put(tblBean.getTbl_name(), tblBean);
+                } else {
+                    KDB_tblBean.addAllColumns(tblBean.getColumns().values());
+                }
+            }
+        }
+    }
+
+    @Override
+    public void addConstraints(List<EitherConstraint> _constraints) {
+        if(_constraints != null){
+            for(EitherConstraint constraint : _constraints){
+                addConstraint(constraint);
+            }
+        }
     }
 }

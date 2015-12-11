@@ -5,7 +5,6 @@
  */
 package edu.ub.tbd.parser;
 
-
 import edu.ub.tbd.beans.ColumnBean;
 import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.exceptions.IncompleteLogicError;
@@ -16,8 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-
 
 import java.util.Set;
 
@@ -48,7 +45,6 @@ import net.sf.jsqlparser.statement.select.FromItemVisitor;
 import net.sf.jsqlparser.statement.select.SubJoin;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
-
 /**
  *
  * @author sathish
@@ -58,7 +54,7 @@ public class SchemaGen {
     private final Statement stmt;
     private List<EitherConstraint> constraints = new ArrayList<>();
     private List<TableBean> knowledgeData = new ArrayList<>();
-    
+
     public SchemaGen(LogData _ld) {
         this.stmt = _ld.getStmt();
     }
@@ -94,75 +90,76 @@ public class SchemaGen {
 
         return extractedSchemaFromSQL;
     }
-    
+
     public List<EitherConstraint> getConstraints() {
-		return constraints;
-	}
+        return constraints;
+    }
 
-	public List<TableBean> getKnowledgeData() {
-		return knowledgeData;
-	}
+    public List<TableBean> getKnowledgeData() {
+        return knowledgeData;
+    }
 
-	abstract class SchemaParser {
+    abstract class SchemaParser {
+
         protected final HashMap<String, TableBean> EXTRACTED_SCHEMA = new HashMap<>();
         protected Set<String> EXTRACTED_ALIAS = new HashSet<>();
         protected List<EitherConstraint> CONSTRAINTS = new ArrayList<>();
-        
+
         private String curr_sql; //Remove this after debugging and code is finalized.
-        
+
         public SchemaParser(String _curr_sql) {
             this.curr_sql = _curr_sql;
         }
-        
+
         public SchemaParser() {
         }
-        
+
         public void addAllExtractedAlias(Set<String> alias) {
-        	EXTRACTED_ALIAS.addAll(alias);
+            EXTRACTED_ALIAS.addAll(alias);
         }
-        
+
         abstract public void init();
-        
+
         public HashMap<String, TableBean> extractSchema() {
             return EXTRACTED_SCHEMA;
         }
-        
+
         public void buildConstraints() {
-        	
         }
-        
+
         public List<TableBean> getKnowledgeData() {
-        	if(EXTRACTED_SCHEMA != null) {
-        		List<TableBean> list = new ArrayList<>();
-        		for(TableBean bean : EXTRACTED_SCHEMA.values()) {
-        			if(bean.getColumns() != null) {
-        				TableBean newTBLBean = new TableBean(bean.getTbl_name());
-        				for(ColumnBean column : bean.getColumns().values()) {
-        					if(column.isConfirmed()) {
-        						newTBLBean.addColumn(column);
-        					}
-        				}
-        				list.add(newTBLBean);
-        			}
-        		}
-        		return list;
-        	}
-        	return null;
+            if (EXTRACTED_SCHEMA != null) {
+                List<TableBean> list = new ArrayList<>();
+                for (TableBean bean : EXTRACTED_SCHEMA.values()) {
+                    if (bean.getColumns() != null) {
+                        TableBean newTBLBean = new TableBean(bean.getTbl_name());
+                        for (ColumnBean column : bean.getColumns().values()) {
+                            if (column.isConfirmed()) {
+                                newTBLBean.addColumn(column);
+                            }
+                        }
+                        list.add(newTBLBean);
+                    }
+                }
+                return list;
+            }
+            return null;
         }
-        
+
         public List<EitherConstraint> getConstraints() {
-        	return CONSTRAINTS;
+            return CONSTRAINTS;
         }
-        
+
         public Set<String> getExtractedAlias() {
-        	return EXTRACTED_ALIAS;
+            return EXTRACTED_ALIAS;
         }
-        
+
         protected void updateExtractedSchemaAndAlias(final SchemaParser parser) {
-        	HashMap<String,TableBean> _extractedSchema = parser.extractSchema();
-        	parser.buildConstraints();
-        	addAllExtractedAlias(parser.getExtractedAlias());
-            for(TableBean tbl : _extractedSchema.values()){
+            HashMap<String, TableBean> _extractedSchema = parser.extractSchema();
+            parser.buildConstraints();
+            CONSTRAINTS.addAll(parser.getConstraints());
+            addAllExtractedAlias(parser.getExtractedAlias());
+            for (TableBean tbl : _extractedSchema.values()) {
                 updateExtractedSchema(tbl);
             }
         }
@@ -175,59 +172,59 @@ public class SchemaGen {
                 EXTRACTED_SCHEMA.put(_extractedTbl.getTbl_name(), _extractedTbl);
             }
         }
-        
+
         protected void mergeColumnsToExtractedSchema(List<ColumnBean> extractedColumns) {
-        	Iterator<ColumnBean> iterator = extractedColumns.iterator();
-        	
-        	while(iterator.hasNext()) {
-        		ColumnBean colBean = iterator.next();
-        		if(!EXTRACTED_ALIAS.contains(colBean.getCol_name())) {
-        			Iterator<Entry<String, TableBean>> schemaIterator = EXTRACTED_SCHEMA.entrySet().iterator();
-            		while(schemaIterator.hasNext()) {
-            			Entry<String, TableBean> next = schemaIterator.next();
-            			TableBean tableBean = next.getValue();
-            			
-            			if(colBean.getTable_name() == null) {
-            				tableBean.addColumn(colBean);
-            			} else if(colBean.getTable_name().equals(next.getKey()) || colBean.getTable_name().equals(next.getValue().getTbl_alias())) {
-            				// Checking for table Name or Table Alias
-            				colBean.setConfirmed(true);
-            				tableBean.addColumn(colBean);
-            				break;
-            			}
-            		}
-        		}
-        	}
+            Iterator<ColumnBean> iterator = extractedColumns.iterator();
+
+            while (iterator.hasNext()) {
+                ColumnBean colBean = iterator.next();
+                if (!EXTRACTED_ALIAS.contains(colBean.getCol_name())) {
+                    Iterator<Entry<String, TableBean>> schemaIterator = EXTRACTED_SCHEMA.entrySet().iterator();
+                    while (schemaIterator.hasNext()) {
+                        Entry<String, TableBean> next = schemaIterator.next();
+                        TableBean tableBean = next.getValue();
+
+                        if (colBean.getTable_name() == null) {
+                            tableBean.addColumn(colBean);
+                        } else if (colBean.getTable_name().equals(next.getKey()) || colBean.getTable_name().equals(next.getValue().getTbl_alias())) {
+                            // Checking for table Name or Table Alias
+                            colBean.setConfirmed(true);
+                            tableBean.addColumn(colBean);
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 
-    class InsertParser extends SchemaParser{
-        
+    class InsertParser extends SchemaParser {
+
         private final Insert stmt;
-        
-        public InsertParser(Insert _stmt){
+
+        public InsertParser(Insert _stmt) {
             super();
             this.stmt = (Insert) _stmt;
         }
-        
-        public void init(){
+
+        public void init() {
             String tblName = stmt.getTable().getName();
-            
+
             List<ColumnBean> columnBeans = new ArrayList<>(stmt.getColumns().size());
-            for(Column _column: stmt.getColumns()){
+            for (Column _column : stmt.getColumns()) {
                 ColumnBean columnBean = new ColumnBean(_column.getColumnName());
                 columnBean.setTable_name(tblName);
                 columnBean.setConfirmed(true);
                 columnBeans.add(columnBean);
             }
-            
+
             TableBean tableBean = new TableBean(tblName);
             tableBean.addAllColumns(columnBeans);
-            
+
             updateExtractedSchema(tableBean);
         }
     }
-    
+
     class SelectUnionParser extends SchemaParser implements SelectVisitor, FromItemVisitor {
 
         public SelectUnionParser(String _curr_sql) {
@@ -237,71 +234,71 @@ public class SchemaGen {
         public SelectUnionParser() {
         }
 
-        public void init(){
+        public void init() {
             //No need to init anything
         }
-        
+
         @Override
         public HashMap<String, TableBean> extractSchema() {
-            if(EXTRACTED_SCHEMA.size() == 1){
-                for(TableBean tbl : EXTRACTED_SCHEMA.values()){
-                    for(ColumnBean col : tbl.getColumns().values()){
+            if (EXTRACTED_SCHEMA.size() == 1) {
+                for (TableBean tbl : EXTRACTED_SCHEMA.values()) {
+                    for (ColumnBean col : tbl.getColumns().values()) {
                         col.setConfirmed(true);
                     }
                 }
             }
             return EXTRACTED_SCHEMA;
         }
-        
+
         @Override
         public void buildConstraints() {
-        	HashMap<String,TableBean> extractSchema = extractSchema();
-        	if(extractSchema != null) {
-        		Map<String, List<String>> map = new HashMap<>();
-        		for(TableBean tblBean : extractSchema.values()) {
-        			if(tblBean.getColumns() != null) {
-        				for(ColumnBean bean : tblBean.getColumns().values()) {
-        					if(!bean.isConfirmed()) {
-        						List<String> list = map.get(bean.getCol_name());
-        						if(list != null) {
-        							list.add(tblBean.getTbl_name());
-        						} else {
-        							list = new ArrayList<>();
-        							list.add(tblBean.getTbl_name());
-        							map.put(bean.getCol_name(), list);
-        						}
-        					}
-        				}
-        			}
-            	}
-        		
-        		CONSTRAINTS = EitherConstraint.createEitherConstraints(map);
-        	}
+            HashMap<String, TableBean> extractSchema = extractSchema();
+            if (extractSchema != null) {
+                Map<String, List<String>> map = new HashMap<>();
+                for (TableBean tblBean : extractSchema.values()) {
+                    if (tblBean.getColumns() != null) {
+                        for (ColumnBean bean : tblBean.getColumns().values()) {
+                            if (!bean.isConfirmed()) {
+                                List<String> list = map.get(bean.getCol_name());
+                                if (list != null) {
+                                    list.add(tblBean.getTbl_name());
+                                } else {
+                                    list = new ArrayList<>();
+                                    list.add(tblBean.getTbl_name());
+                                    map.put(bean.getCol_name(), list);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                CONSTRAINTS = EitherConstraint.createEitherConstraints(map);
+            }
         }
-        
+
         @Override
         public void visit(PlainSelect _ps) {
             //Parse From statements
             FromItem fromItem = _ps.getFromItem();
             fromItem.accept(this);
-            
+
             List<Join> joins = _ps.getJoins();
-            if(joins != null && joins.size() > 0) {
-            	for(int i = 0; i < joins.size(); i++) {
-            		Join join = joins.get(i);
-            		FromItem rightItem = join.getRightItem();
-            		rightItem.accept(this);
-            	}
+            if (joins != null && joins.size() > 0) {
+                for (int i = 0; i < joins.size(); i++) {
+                    Join join = joins.get(i);
+                    FromItem rightItem = join.getRightItem();
+                    rightItem.accept(this);
+                }
             }
-            
+
             //Parse whereclauses
             if (_ps.getWhere() != null) {
-            	Expression expression = _ps.getWhere();
-            	ExpressionVisitorImpl exprVisitorImpl = new ExpressionVisitorImpl(this);
-            	expression.accept(exprVisitorImpl);
-            	
-            	addAllExtractedAlias(exprVisitorImpl.getExprAliasSet());
-            	mergeColumnsToExtractedSchema(exprVisitorImpl.getColumns());
+                Expression expression = _ps.getWhere();
+                ExpressionVisitorImpl exprVisitorImpl = new ExpressionVisitorImpl(this);
+                expression.accept(exprVisitorImpl);
+
+                addAllExtractedAlias(exprVisitorImpl.getExprAliasSet());
+                mergeColumnsToExtractedSchema(exprVisitorImpl.getColumns());
             }
 
             //Parse Projections
@@ -342,10 +339,10 @@ public class SchemaGen {
 
         @Override
         public void visit(SubJoin _sj) {
-        	_sj.getLeft().accept(this);
-        	Join join = _sj.getJoin();
-        	FromItem rightItem = join.getRightItem();
-        	rightItem.accept(this);
+            _sj.getLeft().accept(this);
+            Join join = _sj.getJoin();
+            FromItem rightItem = join.getRightItem();
+            rightItem.accept(this);
         }
 
     }
