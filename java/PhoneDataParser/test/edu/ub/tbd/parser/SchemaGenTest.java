@@ -26,8 +26,9 @@ public class SchemaGenTest {
         LogData ld = getDummyLogDataBean(sql);
         
         SchemaGen schemaGen = new SchemaGen(ld);
-        List<EitherConstraint> contraints = schemaGen.getConstraints();
         HashMap<String,TableBean> tableBean = schemaGen.generate();
+        List<EitherConstraint> contraints = schemaGen.getConstraints();
+        System.out.println("contraints :: " + contraints);
         Iterator<Entry<String, TableBean>> iterator = tableBean.entrySet().iterator();
         while(iterator.hasNext()) {
         	Entry<String, TableBean> next = iterator.next();

@@ -6,7 +6,6 @@
 package edu.ub.tbd.constraint;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -85,7 +84,7 @@ public class EitherConstraint {
     		for(Map.Entry<String, List<String>> entry : constraints.entrySet()) {
     			String key = entry.getKey();
     			List<String> value = entry.getValue();
-    			EitherConstraint eitherConstraint = new EitherConstraint(key, (String[]) value.toArray());
+    			EitherConstraint eitherConstraint = new EitherConstraint(key, value.toArray(new String[value.size()]));
     			constrainstList.add(eitherConstraint);
     		}
     		return constrainstList;

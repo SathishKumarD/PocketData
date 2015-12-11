@@ -9,7 +9,6 @@ import edu.ub.tbd.beans.ColumnBean;
 import edu.ub.tbd.beans.LogData;
 import edu.ub.tbd.exceptions.IncompleteLogicError;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -35,8 +34,6 @@ import edu.ub.tbd.constraint.EitherConstraint;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import com.sun.org.apache.regexp.internal.recompile;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
@@ -272,7 +269,7 @@ public class SchemaGen {
                     }
                 }
 
-                CONSTRAINTS = EitherConstraint.createEitherConstraints(map);
+                CONSTRAINTS.addAll(EitherConstraint.createEitherConstraints(map));
             }
         }
 
