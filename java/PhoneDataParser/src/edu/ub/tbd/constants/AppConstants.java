@@ -13,7 +13,7 @@ import java.io.File;
  */
 public class AppConstants {
     public static String SRC_DIR = "/Users/san/UB/CSE-662/Project/DataSet/logcat";
-    public static String DEST_FOLDER = "/Users/san/UB/CSE-662/Project/Run/OUTPUT";
+    public static String DEST_FOLDER = "OUTPUT";
     
     //public static String SRC_DIR = "/Users/san/UB/CSE-662/Project/DataSet/logcat";
     //public static String DEST_FOLDER = "/home/csgrad/sankarav/OUTPUT";
