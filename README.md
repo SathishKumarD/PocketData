@@ -25,9 +25,9 @@ The application is tested with the following
 
 ### Difference between Mac and Windows PC run:
 1. Mac
-  1. java -jar dist/PhoneDataParser.jar --help
+  ```java -jar dist/PhoneDataParser.jar --help```
 2. Windows PC
-  2. java -classpath lib/*;dist/PhoneDataParser.jar edu.ub.tbd.Main --help
+  ```java -classpath lib/*;dist/PhoneDataParser.jar edu.ub.tbd.Main --help```
 
 ## Running PhoneDataParser:
 1. cd to $PHONE_DATA_PARSER_BASE/java/PhoneDataParser
@@ -37,15 +37,15 @@ OBJECT_GEN mode reads from PocketData Log files and creates JSQLParser Objects. 
 ```
 java -jar dist/PhoneDataParser.jar --mode obj_gen --objects schemagen --src $LOG_BASE_LOC
 ```
-  1. Note: The Object files created using the flag --mode obj_gen can only be used for SCHEMA_GEN as it parses only unique SQLs
-  2. You can parse all SQLs by the flag --mode full (This might take 6.5 hrs)
-  3. --dest _<destination folder>_ This flag can be added to change where the destination files have to go. By default it is OUTPUT folder in the same location.
+  * Note: The Object files created using the flag --mode obj_gen can only be used for SCHEMA_GEN as it parses only unique SQLs
+  * You can parse all SQLs by the flag --mode full (This might take 6.5 hrs)
+  * --dest _<destination folder>_ This flag can be added to change where the destination files have to go. By default it is OUTPUT folder in the same location.
 
 ### SCHEMA_GEN Mode:
 SCHEMA_GEN mode reads the Object files created in OBJECT_GEN mode and creates SCHEMA.xml file.
 ```
 java -jar dist/PhoneDataParser.jar --mode schema_gen --src OUTPUT
 ```
-  1. Note: This is assuming --dest in OBJECT_GEN mode was OUTPUT
+Note: This is assuming --dest in OBJECT_GEN mode was OUTPUT
 
 
