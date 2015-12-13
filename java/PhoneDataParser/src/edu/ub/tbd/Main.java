@@ -24,6 +24,10 @@ public class Main {
      * @param args the command line arguments [-v|V] [-help] [-p "mode"]
      */
     public static void main(String[] args) {
+        if(args == null || args.length == 0 || "-h".equalsIgnoreCase(args[0]) || "--help".equalsIgnoreCase(args[0])){
+            printHelpCommands();
+            return ;
+        }
         extractCommandLineArgs(args);
         
         if(startUp()){
@@ -34,6 +38,7 @@ public class Main {
                     String srcDIR = AppConstants.SRC_DIR; //Leave this. It helps in reducing Class unload cache. Talk to Sankar before u remove this
                     logParser = new LogParser(srcDIR, AppConstants.SRC_LOG_FILE_EXT);
                     logParser.parseLogsAndWriteFile();
+                    System.out.println("Parsed Data written to " + AppConstants.DEST_FOLDER);
                 } catch (Throwable e) {
                     System.out.println("Log Parsing and Object generation incomplete");
                     e.printStackTrace();
@@ -52,6 +57,7 @@ public class Main {
                 try {
                     analyticsGenDriver = new AnalyticsGen_Driver();
                     analyticsGenDriver.run();
+                    System.out.println("Analytics Data written to " + AppConstants.DEST_FOLDER);
                 } catch (Exception ex) {
                     System.out.println("Data generation incomplete");
                     ex.printStackTrace();
@@ -72,6 +78,7 @@ public class Main {
                 try {
                     schemaGenDriver = new SchemaGen_Driver();
                     schemaGenDriver.run();
+                    System.out.println("SCHEMA.xml written to " + AppConstants.ABS_DATA_FOLDER);
                 } catch (Exception ex) {
                     System.out.println("Schema generation incomplete");
                     ex.printStackTrace();
@@ -89,6 +96,43 @@ public class Main {
         }
     }
     
+    private static void printHelpCommands(){
+        System.out.println("(--mode | -m) [(obj_gen | o) | (analytics_gen | a) | (schema_gen | s)] (--objects | -o) [(full | f) | (schemagen | s)] (--src | -s) <source_file_folder> [(--dest | -d) <destination_folder>]");
+        System.out.println("Sample Command Line Arguments:");
+        System.out.println("  #################################################");
+        System.out.println("  ####    OBJECT_GEN for (later SHEMA_GEN):    ####");
+        System.out.println("  #################################################");
+        System.out.println("     Long version:");
+        System.out.println("\t--mode obj_gen --objects schemagen --src <'logcat' folder of PhoneData logs> --dest <OUTPUT folder by PhoneDataParser>");
+        System.out.println("\t--mode obj_gen --objects schemagen --src <'logcat' folder of PhoneData logs>");
+        System.out.println("     Short version:");
+        System.out.println("\t-m o -o s -s <'logcat' folder of PhoneData logs> -d <OUTPUT folder by PhoneDataParser>");
+        System.out.println("\t-m o -o s -s <'logcat' folder of PhoneData logs>");
+        
+        System.out.println("  #####################################################");
+        System.out.println("  ####    OBJECT_GEN for (later ANALYTICS_GEN):    ####");
+        System.out.println("  #####################################################");
+        System.out.println("     Long version:");
+        System.out.println("\t--mode obj_gen --objects full --src <'logcat' folder of PhoneData logs> --dest <OUTPUT folder by PhoneDataParser>");
+        System.out.println("\t--mode obj_gen --objects full --src <'logcat' folder of PhoneData logs>");
+        System.out.println("\t--mode obj_gen --objects --src <'logcat' folder of PhoneData logs>");
+        System.out.println("     Short version:");
+        System.out.println("\t-m o -o f -s <'logcat' folder of PhoneData logs> -d <OUTPUT folder by PhoneDataParser>");
+        System.out.println("\t-m o -o f -s <'logcat' folder of PhoneData logs>");
+        System.out.println("\t-m o -o -s <'logcat' folder of PhoneData logs>");
+        
+        System.out.println("  ######################################");
+        System.out.println("  ####          SCHEMA_GEN          ####");
+        System.out.println("  ######################################");
+        System.out.println("     Long version:");
+        System.out.println("\t--mode schema_gen --src <'OUTPUT' folder of OBJECT_GEN Run> --dest <OUTPUT folder by PhoneDataParser>");
+        System.out.println("\t--mode schema_gen --src <'OUTPUT' folder of OBJECT_GEN Run>");
+        System.out.println("     Short version:");
+        System.out.println("\t-m s -s <'OUTPUT' folder of OBJECT_GEN Run> -d <OUTPUT folder by PhoneDataParser>");
+        System.out.println("\t-m s -s <'OUTPUT' folder of OBJECT_GEN Run>");
+        System.out.println("\t-m -s <'OUTPUT' folder of OBJECT_GEN Run>");
+        
+    }
     
     private static void extractCommandLineArgs(String[] _args){
         for(int i = 0; i < _args.length; i++){
@@ -121,12 +165,15 @@ public class Main {
             if(_args[i].equals("--objects") || _args[i].equals("-o")){
                 String object_gen_type = _args[++i];
                 if(object_gen_type.equalsIgnoreCase("full") || object_gen_type.equalsIgnoreCase("f")){
+                    System.out.println("##### This process should take 6.5 hrs approximately #######");
                     AppConstants.OBJECTS_GEN_FILTER_FULL = true;
                     AppConstants.OBJECTS_GEN_FILTER_FORSCHEMAGEN = false;
                 } else if(object_gen_type.equalsIgnoreCase("schemagen") || object_gen_type.equalsIgnoreCase("s")){
+                    System.out.println("##### This process should take 20 mins approximately #######");
                     AppConstants.OBJECTS_GEN_FILTER_FULL = false;
                     AppConstants.OBJECTS_GEN_FILTER_FORSCHEMAGEN = true;
                 } else {
+                    System.out.println("##### This process should take 20 mins approximately #######");
                     AppConstants.OBJECTS_GEN_FILTER_FULL = true;
                     AppConstants.OBJECTS_GEN_FILTER_FORSCHEMAGEN = false;
                 }

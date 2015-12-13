@@ -47,7 +47,7 @@ public class ColumnSetConstraintSolver_Driver implements ConstraintSolver_Driver
     @Override
     public void solve() {
         for (ConstraintSolver solver : SOLVERS.values()) {
-            System.out.println("Solving for App : " + solver.getApp_id());
+            //System.out.println("Solving for App : " + solver.getApp_id());
             solver.solve();
         }
     }

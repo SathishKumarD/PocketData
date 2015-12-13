@@ -40,7 +40,7 @@ class ColumnSetConstraintSolver implements ConstraintSolver{
     
     @Override
     public void solve() {
-        System.out.println(app_id + " : # of Contraints before solve = " + CONSTRAINTS_DB.size());
+        //System.out.println(app_id + " : # of Contraints before solve = " + CONSTRAINTS_DB.size());
         for(TableBean tblBean : KNOWLEDGE_DB.values()){
             String tblName = tblBean.getTbl_name();
             Collection<ColumnBean> colBeans = tblBean.getColumns().values();
@@ -58,7 +58,7 @@ class ColumnSetConstraintSolver implements ConstraintSolver{
                 }
             }
         }
-        System.out.println(app_id + " : # of Contraints after solve = " + CONSTRAINTS_DB.size());
+        //System.out.println(app_id + " : # of Contraints after solve = " + CONSTRAINTS_DB.size());
     }
 
     @Override
