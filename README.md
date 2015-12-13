@@ -12,9 +12,9 @@
 ## Building PhoneDataParser code:
 ### Pre-requisites:
 The application is tested with the following
-1. Apache ANT version 1.9.4 (The code may work in lower version of ANT)
-2. Oracle Java 1.8.0_20 (The code work on 1.7 but has not been extensively tested)
-3. Mac OS-X (The code does support Windows but haven't been extensively tested on a Windows PC)
+  * Apache ANT version 1.9.4 (The code may work in lower version of ANT)
+  * Oracle Java 1.8.0_20 (The code may work on 1.7 but has not been extensively tested)
+  * Mac OS-X (The code does support Windows but haven't been extensively tested on a Windows PC)
 
 ### Build Instructions:
 1. cd to $PHONE_DATA_PARSER_BASE/java/PhoneDataParser
@@ -39,7 +39,7 @@ java -jar dist/PhoneDataParser.jar --mode obj_gen --objects schemagen --src $LOG
 ```
   * Note: The Object files created using the flag --mode obj_gen can only be used for SCHEMA_GEN as it parses only unique SQLs
   * You can parse all SQLs by the flag --mode full (This might take 6.5 hrs)
-  * --dest _<destination folder>_ This flag can be added to change where the destination files have to go. By default it is OUTPUT folder in the same location.
+  * --dest *<destination folder>* This flag can be added to change where the destination files have to go. By default it is OUTPUT folder in the same location.
 
 ### SCHEMA_GEN Mode:
 SCHEMA_GEN mode reads the Object files created in OBJECT_GEN mode and creates SCHEMA.xml file.
