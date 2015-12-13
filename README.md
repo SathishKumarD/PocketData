@@ -34,14 +34,18 @@ The application is tested with the following
 
 ### OBJECT_GEN Mode:
 OBJECT_GEN mode reads from PocketData Log files and creates JSQLParser Objects. This Phase should be run at least once before running PhoneDataParser in any other mode.
-1. java -jar dist/PhoneDataParser.jar --mode obj_gen --objects schemagen --src $LOG_BASE_LOC
+```
+java -jar dist/PhoneDataParser.jar --mode obj_gen --objects schemagen --src $LOG_BASE_LOC
+```
   1. Note: The Object files created using the flag --mode obj_gen can only be used for SCHEMA_GEN as it parses only unique SQLs
   2. You can parse all SQLs by the flag --mode full (This might take 6.5 hrs)
-  3. --dest <destination_folder> This flag can be added to change where the destination files have to go. By default it is OUTPUT folder in the same location.
+  3. --dest _<destination folder>_ This flag can be added to change where the destination files have to go. By default it is OUTPUT folder in the same location.
 
 ### SCHEMA_GEN Mode:
 SCHEMA_GEN mode reads the Object files created in OBJECT_GEN mode and creates SCHEMA.xml file.
-1. java -jar dist/PhoneDataParser.jar --mode schema_gen --src OUTPUT
+```
+java -jar dist/PhoneDataParser.jar --mode schema_gen --src OUTPUT
+```
   1. Note: This is assuming --dest in OBJECT_GEN mode was OUTPUT
 
 
